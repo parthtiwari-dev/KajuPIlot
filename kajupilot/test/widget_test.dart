@@ -1,30 +1,81 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:kajupilot/main.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kajupilot/app/kaju_app.dart';
+import 'package:kajupilot/core/auth/token_storage.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('shows setup screen when no token is stored', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tokenStorageProvider.overrideWithValue(MemoryTokenStorage()),
+        ],
+        child: const KajuApp(persistTheme: false),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byKey(const Key('setup-screen')), findsOneWidget);
+    expect(find.text('Private setup'), findsOneWidget);
   });
+
+  testWidgets('shows app shell when token is stored', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tokenStorageProvider.overrideWithValue(
+            MemoryTokenStorage(initialToken: 'stored-token'),
+          ),
+        ],
+        child: const KajuApp(persistTheme: false),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('feature-today-screen')), findsOneWidget);
+    expect(find.byKey(const Key('universal-input-bar')), findsOneWidget);
+  });
+
+  testWidgets('bottom navigation switches feature tabs', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tokenStorageProvider.overrideWithValue(
+            MemoryTokenStorage(initialToken: 'stored-token'),
+          ),
+        ],
+        child: const KajuApp(persistTheme: false),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('feature-today-screen')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('nav-money')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('feature-money-screen')), findsOneWidget);
+  });
+}
+
+class MemoryTokenStorage implements TokenStorage {
+  MemoryTokenStorage({String? initialToken}) : _token = initialToken;
+
+  String? _token;
+
+  @override
+  Future<String?> readToken() async => _token;
+
+  @override
+  Future<void> writeToken(String token) async {
+    _token = token;
+  }
+
+  @override
+  Future<void> clearToken() async {
+    _token = null;
+  }
 }
