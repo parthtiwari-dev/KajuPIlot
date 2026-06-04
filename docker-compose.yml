@@ -1,0 +1,100 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kajupilot
+      POSTGRES_USER: kajuadmin
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kajuadmin -d kajupilot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  api:
+    build:
+      context: ./kajupilot-api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://kajuadmin:${DB_PASSWORD}@postgres:5432/kajupilot
+      REDIS_URL: redis://redis:6379
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_SETUP_CODE: ${ADMIN_SETUP_CODE}
+      NODE_ENV: production
+      PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - internal
+      - external
+
+  admin:
+    build:
+      context: ./kajupilot-admin
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      ADMIN_SECRET: ${ADMIN_SECRET}
+      NODE_ENV: production
+      PORT: 3001
+    depends_on:
+      - api
+    networks:
+      - internal
+      - external
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      API_HOST: ${API_HOST}
+      ADMIN_HOST: ${ADMIN_HOST}
+      ADMIN_USER: ${ADMIN_USER}
+      ADMIN_PASS_HASH: ${ADMIN_PASS_HASH}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - admin
+    networks:
+      - external
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    driver: bridge
+    internal: true
+  external:
+    driver: bridge

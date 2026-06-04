@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(uuid())
+  name         String
+  businessName String?
+  deviceToken  String       @unique
+  role         Role         @default(OWNER)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  parties     Party[]
+  deals       Deal[]
+  payments    Payment[]
+  expenses    Expense[]
+  tasks       Task[]
+  callLogs    CallLog[]
+  aiParseLogs AiParseLog[]
+}
+
+enum Role {
+  OWNER
+  ADMIN
+}
+
+model Party {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  name      String
+  phone     String?
+  type      PartyType @default(CUSTOMER)
+  trustTag  TrustTag  @default(NEW)
+  notes     String?
+  syncId    String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  deals     Deal[]
+  payments  Payment[]
+  tasks     Task[]
+  callLogs  CallLog[]
+
+  @@index([userId, deletedAt])
+}
+
+enum PartyType {
+  CUSTOMER
+  SUPPLIER
+  BOTH
+}
+
+enum TrustTag {
+  RELIABLE
+  SLOW_PAYER
+  RISKY
+  NEW
+}
+
+model Deal {
+  id           String     @id @default(uuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  partyId      String
+  party        Party      @relation(fields: [partyId], references: [id])
+  type         DealType   @default(SALE)
+  cashewGrade  String
+  quantityKg   Decimal    @db.Decimal(10, 2)
+  ratePerKg    Decimal    @db.Decimal(10, 2)
+  totalAmount  Decimal    @db.Decimal(14, 2)
+  paidAmount   Decimal    @default(0) @db.Decimal(14, 2)
+  status       DealStatus @default(CONFIRMED)
+  deliveryDate DateTime?
+  paymentDue   DateTime?
+  notes        String?
+  syncId       String     @unique
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  payments     Payment[]
+
+  @@index([userId, status, deletedAt])
+  @@index([partyId, deletedAt])
+  @@index([paymentDue])
+}
+
+enum DealType {
+  SALE
+  PURCHASE
+}
+
+enum DealStatus {
+  QUOTED
+  CONFIRMED
+  DELIVERED
+  PAID
+}
+
+model Payment {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  partyId     String
+  party       Party       @relation(fields: [partyId], references: [id])
+  dealId      String?
+  deal        Deal?       @relation(fields: [dealId], references: [id])
+  type        PaymentType
+  amount      Decimal     @db.Decimal(14, 2)
+  method      String?
+  notes       String?
+  paymentDate DateTime
+  syncId      String      @unique
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  @@index([userId, paymentDate, deletedAt])
+  @@index([partyId, deletedAt])
+}
+
+enum PaymentType {
+  RECEIVED
+  PAID
+}
+
+model Expense {
+  id          String          @id @default(uuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  category    ExpenseCategory
+  amount      Decimal         @db.Decimal(14, 2)
+  notes       String?
+  expenseDate DateTime
+  syncId      String          @unique
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  deletedAt   DateTime?
+
+  @@index([userId, expenseDate, deletedAt])
+}
+
+enum ExpenseCategory {
+  TRANSPORT
+  LABOUR
+  PACKAGING
+  BROKER_COMMISSION
+  STOCK_PURCHASE
+  OTHER
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  partyId     String?
+  party       Party?     @relation(fields: [partyId], references: [id])
+  type        TaskType
+  title       String
+  notes       String?
+  scheduledAt DateTime
+  completedAt DateTime?
+  status      TaskStatus @default(PENDING)
+  priority    Int        @default(0)
+  syncId      String     @unique
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  callLogs    CallLog[]
+
+  @@index([userId, scheduledAt, deletedAt])
+  @@index([userId, status, deletedAt])
+}
+
+enum TaskType {
+  CALL
+  DELIVERY
+  PAYMENT_COLLECTION
+  REMINDER
+  OTHER
+}
+
+enum TaskStatus {
+  PENDING
+  DONE
+  POSTPONED
+  CANCELLED
+}
+
+model CallLog {
+  id             String      @id @default(uuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  taskId         String?
+  task           Task?       @relation(fields: [taskId], references: [id])
+  partyId        String?
+  party          Party?      @relation(fields: [partyId], references: [id])
+  outcome        CallOutcome
+  notes          String?
+  promisedDate   DateTime?
+  promisedAmount Decimal?    @db.Decimal(14, 2)
+  nextFollowup   DateTime?
+  syncId         String      @unique
+  createdAt      DateTime    @default(now())
+}
+
+enum CallOutcome {
+  PAYMENT_PROMISED
+  NEW_ORDER
+  NO_ANSWER
+  NOT_INTERESTED
+  DELIVERY_UPDATE
+  OTHER
+}
+
+model AiParseLog {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  rawInput    String
+  parsedJson  Json
+  confirmed   Boolean   @default(false)
+  confirmedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, createdAt])
+}

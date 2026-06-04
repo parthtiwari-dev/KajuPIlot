@@ -1,0 +1,19 @@
+{$API_HOST:api.localhost} {
+  reverse_proxy api:3000
+  header {
+    -Server
+    Strict-Transport-Security "max-age=31536000"
+  }
+}
+
+{$ADMIN_HOST:admin.localhost} {
+  basicauth {
+    {$ADMIN_USER} {$ADMIN_PASS_HASH}
+  }
+
+  reverse_proxy admin:3001
+  header {
+    -Server
+    Strict-Transport-Security "max-age=31536000"
+  }
+}
