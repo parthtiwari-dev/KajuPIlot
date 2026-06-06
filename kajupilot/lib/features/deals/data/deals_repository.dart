@@ -347,8 +347,13 @@ class DealsRepository {
     );
   }
 
-  Future<void> refresh({DealListQuery query = const DealListQuery()}) async {
-    await flushPendingDealSync();
+  Future<void> refresh({
+    DealListQuery query = const DealListQuery(),
+    bool flushPending = true,
+  }) async {
+    if (flushPending) {
+      await flushPendingDealSync();
+    }
     final remoteDeals = await _api.list(
       status: query.filter.status,
       partyId: query.partyId,

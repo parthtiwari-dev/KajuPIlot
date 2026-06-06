@@ -333,9 +333,13 @@ class PaymentsRepository {
     );
   }
 
-  Future<void> refresh(
-      {PaymentListQuery query = const PaymentListQuery()}) async {
-    await flushPendingPaymentSync();
+  Future<void> refresh({
+    PaymentListQuery query = const PaymentListQuery(),
+    bool flushPending = true,
+  }) async {
+    if (flushPending) {
+      await flushPendingPaymentSync();
+    }
     final remotePayments = await _api.list(
       partyId: query.partyId,
       dealId: query.dealId,

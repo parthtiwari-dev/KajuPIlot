@@ -226,8 +226,10 @@ class PartiesRepository {
     );
   }
 
-  Future<void> refresh() async {
-    await flushPendingPartySync();
+  Future<void> refresh({bool flushPending = true}) async {
+    if (flushPending) {
+      await flushPendingPartySync();
+    }
     final remoteParties = await _api.list();
     for (final item in remoteParties) {
       await _upsertParty(item.party);

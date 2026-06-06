@@ -246,9 +246,13 @@ class ExpensesRepository {
     );
   }
 
-  Future<void> refresh(
-      {ExpenseListQuery query = const ExpenseListQuery()}) async {
-    await flushPendingExpenseSync();
+  Future<void> refresh({
+    ExpenseListQuery query = const ExpenseListQuery(),
+    bool flushPending = true,
+  }) async {
+    if (flushPending) {
+      await flushPendingExpenseSync();
+    }
     final remoteExpenses = await _api.list(
       scope: query.scope,
       category: query.category,

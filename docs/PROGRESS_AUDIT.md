@@ -2,7 +2,7 @@
 
 Date: 2026-06-07
 Branch: `main`
-Status: Phase 1D.1 personal/business expense split implemented and verified; Money is ready for IQOO smoke before Phase 1E
+Status: Phase 1E polish and silent sync reliability implemented and verified; ready for IQOO smoke before Phase 2
 
 ## Branch And Repo
 
@@ -240,6 +240,25 @@ Status: Phase 1D.1 personal/business expense split implemented and verified; Mon
 | Split expense summary into Business and Personal totals | Done |
 | Keep budgets/accounts/advanced reports out | Done |
 
+## Phase 1E Checklist
+
+| Task | Result |
+|---|---|
+| Add silent sync coordinator | Done, retries Parties, Deals, Payments, and Expenses pending queues |
+| De-dupe concurrent sync retries | Done |
+| Retry pending sync after app auth/login | Done |
+| Retry pending sync on app foreground resume | Done |
+| Retry pending sync during pull-to-refresh | Done, then pulls the active screen data without double-counting attempts |
+| Keep sync retry quiet | Done, no popup/banner/manual sync screen added |
+| Polish Person Profile loading states | Done, replaced spinners/progress bars with Kaju skeleton loaders |
+| Add pull-to-refresh to profile Deals tab | Done |
+| Add pull-to-refresh to profile Payments tab | Done |
+| Add swipe delete + undo to profile Deals tab | Done |
+| Add swipe delete + undo to profile Payments tab | Done |
+| Add profile empty-state CTAs | Done, Add Deal and Add Payment actions |
+| Keep Money ledger rows non-deletable | Done, ledger rows remain computed balances |
+| Keep Today/More placeholders unchanged | Done |
+
 ## Phase 0 App Shell Lock
 
 | Task | Result |
@@ -400,7 +419,7 @@ Status: Phase 1D.1 personal/business expense split implemented and verified; Mon
 | `flutter pub run build_runner build --delete-conflicting-outputs` | Pass |
 | `dart.bat format lib test` | Pass |
 | `flutter.bat analyze` | Pass |
-| `flutter.bat test` | Pass, 36 Flutter tests |
+| `flutter.bat test` | Pass, 39 Flutter tests |
 | `flutter.bat test test/features/money` | Pass, 5 Money repository tests |
 | `flutter.bat build apk --debug` | Pass |
 | `npm.cmd run build` in API | Pass |
@@ -412,9 +431,9 @@ Status: Phase 1D.1 personal/business expense split implemented and verified; Mon
 | `npm.cmd audit` in admin | Pass, 0 vulnerabilities |
 | `docker compose --env-file .env.example config` | Pass |
 | `make health` | Pass, API health and AI provider config returned successfully |
-| `make migrate` | Pass, applied `20260607160000_add_expense_scope` |
-| Docker API rebuild | Pass with `docker compose ... build api` |
-| Docker dev stack restart | Pass with `docker compose ... up -d postgres redis api admin` |
+| `make migrate` | Pass, no pending migrations |
+| Docker API/admin rebuild | Pass with `make build` |
+| Docker dev stack restart | Pass with `make up` |
 | Authenticated Parties route smoke | Pass, `GET /api/v1/parties` returned successfully |
 | Authenticated Deals route smoke | Pass, `GET /api/v1/deals` returned successfully |
 | Authenticated bucket-wise Deal create smoke | Pass, created deal with item `10 balti` and pending total |
@@ -457,6 +476,8 @@ Status: Phase 1D.1 personal/business expense split implemented and verified; Mon
 | Payment records could double-count deal balances | Linked payments now mutate deal paid amount; party-level credits reduce party balances only |
 | Party ledger ignored unlinked payments | Party ledger and local stats now include party-level payment credits |
 | Personal expenses could pollute business expense totals | Added Business/Personal expense scope and split summaries |
+| Profile tab swipe delete fought horizontal tab paging | Disabled horizontal swiping on profile `TabBarView` so row swipe-delete is reliable |
+| Sync retry needed to be reliable but invisible | Added `SyncCoordinator` and lifecycle retry without popups or manual sync UI |
 
 ## Upgrade Notes
 
@@ -592,6 +613,18 @@ Status: Phase 1D.1 personal/business expense split implemented and verified; Mon
 | UI surface | Scope is a segmented control in Add/Edit Expense and filter chips in Money |
 | Overbuild boundary | No budgets, wallets, bank accounts, recurring rules, or advanced charts yet |
 
+## Phase 1E Data Decisions
+
+| Item | Decision |
+|---|---|
+| Sync retry UX | Automatic and quiet; no popup, banner, or manual sync screen |
+| Retry timing | After auth, on app foreground resume, and on pull-to-refresh |
+| Retry ordering | Flush all pending queues first, then pull the active screen's remote data |
+| Duplicate retry guard | Concurrent retry calls share one in-flight retry future |
+| Profile delete behavior | Deals and Payments tabs match main list swipe-delete + undo behavior |
+| Ledger delete boundary | Money receivable/payable rows stay non-deletable because they are computed aggregates |
+| Phase boundary | No Today/tasks, AI, reports, admin, or release assets in Phase 1E |
+
 ## Next Step
 
-Smoke Phase 1D.1 on the IQOO: run `make run`, add one Business expense and one Personal expense, confirm the Money summary splits them, filter Personal only, relaunch, pull refresh, and test delete plus undo. After that, move to Phase 1E.
+Smoke Phase 1E on the IQOO: run `make run`, add or verify a person, deal, payment, Business expense, and Personal expense; pull refresh People, Deals, Money, and Person Profile Deals/Payments; test delete + undo on main lists and profile tabs; relaunch and confirm records persist. After that, move to Phase 2 Today/Tasks planning.

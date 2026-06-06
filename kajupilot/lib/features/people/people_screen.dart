@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/kaju_colors.dart';
+import '../../core/sync/sync_coordinator.dart';
 import '../../core/theme/spacing.dart';
 import '../../shared/widgets/kaju_empty_state.dart';
 import '../../shared/widgets/kaju_skeleton.dart';
@@ -35,7 +36,7 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
     return RefreshIndicator(
       color: colors.accent,
       backgroundColor: colors.bgElevated,
-      onRefresh: () => ref.read(partiesRepositoryProvider).refresh(),
+      onRefresh: _refresh,
       child: ListView(
         key: const Key('feature-people-screen'),
         padding: const EdgeInsets.fromLTRB(
@@ -160,6 +161,15 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _refresh() async {
+    try {
+      await ref.read(syncCoordinatorProvider).retryAll();
+      await ref.read(partiesRepositoryProvider).refresh(flushPending: false);
+    } catch (_) {
+      // Refresh is intentionally quiet; local data remains visible offline.
+    }
   }
 
   Future<void> _delete(PartyListItem item) async {

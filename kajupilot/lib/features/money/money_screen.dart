@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/db/app_database.dart';
+import '../../core/sync/sync_coordinator.dart';
 import '../../core/theme/kaju_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/utils/currency.dart';
@@ -9,6 +10,8 @@ import '../../shared/widgets/amount_display.dart';
 import '../../shared/widgets/kaju_card.dart';
 import '../../shared/widgets/kaju_empty_state.dart';
 import '../../shared/widgets/kaju_skeleton.dart';
+import '../deals/data/deals_repository.dart';
+import '../people/data/parties_repository.dart';
 import 'data/expenses_repository.dart';
 import 'data/money_models.dart';
 import 'data/payments_repository.dart';
@@ -234,7 +237,7 @@ class _LedgerTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return RefreshIndicator(
-      onRefresh: () => ref.read(paymentsRepositoryProvider).refresh(),
+      onRefresh: () => _refresh(ref),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
           KajuSpacing.lg,
@@ -263,6 +266,17 @@ class _LedgerTab extends ConsumerWidget {
       ),
     );
   }
+
+  Future<void> _refresh(WidgetRef ref) async {
+    try {
+      await ref.read(syncCoordinatorProvider).retryAll();
+      await ref.read(partiesRepositoryProvider).refresh(flushPending: false);
+      await ref.read(dealsRepositoryProvider).refresh(flushPending: false);
+      await ref.read(paymentsRepositoryProvider).refresh(flushPending: false);
+    } catch (_) {
+      // Refresh is intentionally quiet; local ledger stays usable offline.
+    }
+  }
 }
 
 class _ExpensesTab extends ConsumerWidget {
@@ -280,8 +294,7 @@ class _ExpensesTab extends ConsumerWidget {
     final summary = ref.watch(expenseSummaryProvider(query));
 
     return RefreshIndicator(
-      onRefresh: () =>
-          ref.read(expensesRepositoryProvider).refresh(query: query),
+      onRefresh: () => _refresh(ref),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
           KajuSpacing.lg,
@@ -413,6 +426,17 @@ class _ExpensesTab extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _refresh(WidgetRef ref) async {
+    try {
+      await ref.read(syncCoordinatorProvider).retryAll();
+      await ref
+          .read(expensesRepositoryProvider)
+          .refresh(query: query, flushPending: false);
+    } catch (_) {
+      // Refresh is intentionally quiet; local expenses stay usable offline.
+    }
   }
 
   Future<void> _delete(

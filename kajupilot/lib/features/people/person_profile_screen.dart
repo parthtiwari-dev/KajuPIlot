@@ -5,12 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/db/app_database.dart';
+import '../../core/sync/sync_coordinator.dart';
 import '../../core/theme/kaju_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../shared/widgets/amount_display.dart';
 import '../../shared/widgets/kaju_action_button.dart';
 import '../../shared/widgets/kaju_empty_state.dart';
 import '../../shared/widgets/kaju_card.dart';
+import '../../shared/widgets/kaju_skeleton.dart';
 import '../../shared/widgets/person_avatar.dart';
 import '../deals/data/deal_models.dart';
 import '../deals/data/deals_repository.dart';
@@ -25,9 +27,14 @@ import 'data/party_models.dart';
 import 'widgets/person_sheet.dart';
 
 class PersonProfileScreen extends ConsumerStatefulWidget {
-  const PersonProfileScreen({super.key, required this.partyId});
+  const PersonProfileScreen({
+    super.key,
+    required this.partyId,
+    this.initialTabIndex = 0,
+  });
 
   final String partyId;
+  final int initialTabIndex;
 
   @override
   ConsumerState<PersonProfileScreen> createState() =>
@@ -43,7 +50,11 @@ class _PersonProfileScreenState extends ConsumerState<PersonProfileScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(
+      length: 4,
+      initialIndex: widget.initialTabIndex,
+      vsync: this,
+    );
   }
 
   @override
@@ -69,7 +80,7 @@ class _PersonProfileScreenState extends ConsumerState<PersonProfileScreen>
         title: const Text('Person'),
       ),
       body: partyState.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const _ProfileLoadingState(),
         error: (_, __) => const KajuEmptyState(
           icon: Icons.error_outline,
           title: 'Could not open person',
@@ -116,6 +127,7 @@ class _PersonProfileScreenState extends ConsumerState<PersonProfileScreen>
                 height: 360,
                 child: TabBarView(
                   controller: _tabController,
+                  physics: const NeverScrollableScrollPhysics(),
                   children: [
                     _ProfileDealsTab(partyId: party.id),
                     _ProfilePaymentsTab(partyId: party.id),
@@ -236,7 +248,7 @@ class _ProfileStats extends ConsumerWidget {
     final stats = ref.watch(partyStatsProvider(partyId));
 
     return stats.when(
-      loading: () => const KajuCard(child: LinearProgressIndicator()),
+      loading: () => const KajuSkeletonCard(),
       error: (_, __) => const SizedBox.shrink(),
       data: (value) => KajuCard(
         child: Row(
@@ -294,17 +306,22 @@ class _ProfileEmptyTab extends StatelessWidget {
   const _ProfileEmptyTab({
     required this.icon,
     required this.title,
+    this.body = 'No records here yet.',
+    this.action,
   });
 
   final IconData icon;
   final String title;
+  final String body;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
     return KajuEmptyState(
       icon: icon,
       title: title,
-      body: 'No records here yet.',
+      body: body,
+      action: action,
     );
   }
 }
@@ -321,32 +338,104 @@ class _ProfileDealsTab extends ConsumerWidget {
     );
 
     return deals.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const _ProfileEmptyTab(
-        icon: Icons.cloud_off_outlined,
-        title: 'Deals are saved locally',
+      loading: () => _ProfileRefreshList(
+        onRefresh: () => _refresh(ref),
+        children: const [_ProfileTabLoading()],
+      ),
+      error: (_, __) => _ProfileRefreshList(
+        onRefresh: () => _refresh(ref),
+        children: const [
+          _ProfileEmptyTab(
+            icon: Icons.cloud_off_outlined,
+            title: 'Deals are saved locally',
+            body: 'Pull down to refresh when connection is back.',
+          ),
+        ],
       ),
       data: (items) {
         if (items.isEmpty) {
-          return const _ProfileEmptyTab(
-            icon: Icons.inventory_2_outlined,
-            title: 'No deals yet',
+          return _ProfileRefreshList(
+            onRefresh: () => _refresh(ref),
+            children: [
+              _ProfileEmptyTab(
+                icon: Icons.inventory_2_outlined,
+                title: 'No deals yet',
+                body: 'Add the first sale or purchase for this person.',
+                action: FilledButton.icon(
+                  onPressed: () => showDealSheet(context),
+                  icon: const Icon(Icons.add_business_outlined),
+                  label: const Text('Add deal'),
+                ),
+              ),
+            ],
           );
         }
 
-        return ListView.separated(
-          padding: const EdgeInsets.only(top: KajuSpacing.md),
-          itemBuilder: (context, index) {
-            final item = items[index];
-            return DealCard(
-              item: item,
-              onTap: () => showDealSheet(context, item: item),
-            );
-          },
-          separatorBuilder: (_, __) => const SizedBox(height: KajuSpacing.md),
-          itemCount: items.length,
+        return RefreshIndicator(
+          onRefresh: () => _refresh(ref),
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(top: KajuSpacing.md),
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return Dismissible(
+                key: Key('profile-deal-${item.deal.id}'),
+                direction: DismissDirection.endToStart,
+                background: const _ProfileDeleteBackground(),
+                onDismissed: (_) => _delete(context, ref, item),
+                child: DealCard(
+                  item: item,
+                  onTap: () => showDealSheet(context, item: item),
+                ),
+              );
+            },
+            separatorBuilder: (_, __) => const SizedBox(
+              height: KajuSpacing.md,
+            ),
+            itemCount: items.length,
+          ),
         );
       },
+    );
+  }
+
+  Future<void> _refresh(WidgetRef ref) async {
+    try {
+      await ref.read(syncCoordinatorProvider).retryAll();
+      await ref.read(dealsRepositoryProvider).refresh(
+            query: DealListQuery(partyId: partyId),
+            flushPending: false,
+          );
+      ref.invalidate(partyStatsProvider(partyId));
+    } catch (_) {
+      // Refresh is intentionally quiet; local profile data remains visible.
+    }
+  }
+
+  Future<void> _delete(
+    BuildContext context,
+    WidgetRef ref,
+    DealListItem item,
+  ) async {
+    final repository = ref.read(dealsRepositoryProvider);
+    final deleted = await repository.softDelete(item.deal.id);
+    ref.invalidate(partyStatsProvider(partyId));
+    if (!context.mounted || deleted == null) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${item.gradeSummary} deal deleted'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            unawaited(repository.restore(item.deal).then((_) {
+              ref.invalidate(partyStatsProvider(partyId));
+            }));
+          },
+        ),
+      ),
     );
   }
 }
@@ -363,32 +452,183 @@ class _ProfilePaymentsTab extends ConsumerWidget {
     );
 
     return payments.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const _ProfileEmptyTab(
-        icon: Icons.cloud_off_outlined,
-        title: 'Payments are saved locally',
+      loading: () => _ProfileRefreshList(
+        onRefresh: () => _refresh(ref),
+        children: const [_ProfileTabLoading()],
+      ),
+      error: (_, __) => _ProfileRefreshList(
+        onRefresh: () => _refresh(ref),
+        children: const [
+          _ProfileEmptyTab(
+            icon: Icons.cloud_off_outlined,
+            title: 'Payments are saved locally',
+            body: 'Pull down to refresh when connection is back.',
+          ),
+        ],
       ),
       data: (items) {
         if (items.isEmpty) {
-          return const _ProfileEmptyTab(
-            icon: Icons.currency_rupee,
-            title: 'No payments yet',
+          return _ProfileRefreshList(
+            onRefresh: () => _refresh(ref),
+            children: [
+              _ProfileEmptyTab(
+                icon: Icons.currency_rupee,
+                title: 'No payments yet',
+                body: 'Record money received or paid for this person.',
+                action: FilledButton.icon(
+                  onPressed: () => showPaymentSheet(context),
+                  icon: const Icon(Icons.payments_outlined),
+                  label: const Text('Add payment'),
+                ),
+              ),
+            ],
           );
         }
 
-        return ListView.separated(
-          padding: const EdgeInsets.only(top: KajuSpacing.md),
-          itemBuilder: (context, index) {
-            final item = items[index];
-            return PaymentCard(
-              item: item,
-              onTap: () => showPaymentSheet(context, item: item),
-            );
-          },
-          separatorBuilder: (_, __) => const SizedBox(height: KajuSpacing.md),
-          itemCount: items.length,
+        return RefreshIndicator(
+          onRefresh: () => _refresh(ref),
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(top: KajuSpacing.md),
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return Dismissible(
+                key: Key('profile-payment-${item.payment.id}'),
+                direction: DismissDirection.endToStart,
+                background: const _ProfileDeleteBackground(),
+                onDismissed: (_) => _delete(context, ref, item),
+                child: PaymentCard(
+                  item: item,
+                  onTap: () => showPaymentSheet(context, item: item),
+                ),
+              );
+            },
+            separatorBuilder: (_, __) => const SizedBox(
+              height: KajuSpacing.md,
+            ),
+            itemCount: items.length,
+          ),
         );
       },
+    );
+  }
+
+  Future<void> _refresh(WidgetRef ref) async {
+    try {
+      await ref.read(syncCoordinatorProvider).retryAll();
+      await ref.read(paymentsRepositoryProvider).refresh(
+            query: PaymentListQuery(partyId: partyId),
+            flushPending: false,
+          );
+      ref.invalidate(partyStatsProvider(partyId));
+    } catch (_) {
+      // Refresh is intentionally quiet; local profile data remains visible.
+    }
+  }
+
+  Future<void> _delete(
+    BuildContext context,
+    WidgetRef ref,
+    PaymentListItem item,
+  ) async {
+    final repository = ref.read(paymentsRepositoryProvider);
+    final deleted = await repository.softDelete(item.payment.id);
+    ref.invalidate(partyStatsProvider(partyId));
+    if (!context.mounted || deleted == null) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${item.party.name} payment deleted'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            unawaited(repository.restore(item.payment).then((_) {
+              ref.invalidate(partyStatsProvider(partyId));
+            }));
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileRefreshList extends StatelessWidget {
+  const _ProfileRefreshList({
+    required this.onRefresh,
+    required this.children,
+  });
+
+  final RefreshCallback onRefresh;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(top: KajuSpacing.md),
+        children: children,
+      ),
+    );
+  }
+}
+
+class _ProfileTabLoading extends StatelessWidget {
+  const _ProfileTabLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      children: [
+        KajuSkeletonCard(),
+        SizedBox(height: KajuSpacing.md),
+        KajuSkeletonCard(),
+      ],
+    );
+  }
+}
+
+class _ProfileLoadingState extends StatelessWidget {
+  const _ProfileLoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        KajuSpacing.lg,
+        KajuSpacing.md,
+        KajuSpacing.lg,
+        KajuSpacing.xl,
+      ),
+      children: const [
+        KajuSkeletonCard(),
+        SizedBox(height: KajuSpacing.lg),
+        KajuSkeletonCard(),
+        SizedBox(height: KajuSpacing.lg),
+        KajuSkeletonCard(),
+      ],
+    );
+  }
+}
+
+class _ProfileDeleteBackground extends StatelessWidget {
+  const _ProfileDeleteBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.kajuColors;
+
+    return Container(
+      padding: const EdgeInsets.only(right: KajuSpacing.lg),
+      alignment: Alignment.centerRight,
+      decoration: BoxDecoration(
+        color: colors.dangerMuted,
+        borderRadius: BorderRadius.circular(KajuRadius.lg),
+      ),
+      child: Icon(Icons.delete_outline, color: colors.danger),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/kaju_colors.dart';
+import '../../core/sync/sync_coordinator.dart';
 import '../../core/theme/spacing.dart';
 import '../../shared/widgets/kaju_empty_state.dart';
 import '../../shared/widgets/kaju_skeleton.dart';
@@ -35,7 +36,7 @@ class _DealsScreenState extends ConsumerState<DealsScreen> {
     return RefreshIndicator(
       color: colors.accent,
       backgroundColor: colors.bgElevated,
-      onRefresh: () => ref.read(dealsRepositoryProvider).refresh(query: _query),
+      onRefresh: _refresh,
       child: ListView(
         key: const Key('feature-deals-screen'),
         padding: const EdgeInsets.fromLTRB(
@@ -168,6 +169,17 @@ class _DealsScreenState extends ConsumerState<DealsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _refresh() async {
+    try {
+      await ref.read(syncCoordinatorProvider).retryAll();
+      await ref
+          .read(dealsRepositoryProvider)
+          .refresh(query: _query, flushPending: false);
+    } catch (_) {
+      // Refresh is intentionally quiet; local data remains visible offline.
+    }
   }
 
   Future<void> _delete(DealListItem item) async {

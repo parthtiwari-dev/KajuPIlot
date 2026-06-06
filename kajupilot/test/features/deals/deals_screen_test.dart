@@ -13,6 +13,8 @@ import 'package:kajupilot/features/deals/data/deals_api.dart';
 import 'package:kajupilot/features/deals/data/deals_repository.dart';
 import 'package:kajupilot/features/deals/deals_screen.dart';
 import 'package:kajupilot/features/deals/widgets/deal_sheet.dart';
+import 'package:kajupilot/features/money/data/money_models.dart';
+import 'package:kajupilot/features/money/data/payments_repository.dart';
 import 'package:kajupilot/features/people/data/parties_api.dart';
 import 'package:kajupilot/features/people/data/parties_repository.dart';
 import 'package:kajupilot/features/people/data/party_models.dart';
@@ -130,6 +132,11 @@ void main() {
   });
 
   testWidgets('People profile Deals tab shows party deals', (tester) async {
+    tester.view.physicalSize = const Size(420, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -154,10 +161,56 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.drag(find.byType(ListView).first, const Offset(0, -520));
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('Amit Verma'), findsWidgets);
     expect(find.textContaining('W320'), findsOneWidget);
+    expect(find.byKey(const Key('profile-deal-deal-1')), findsOneWidget);
+  });
+
+  testWidgets('People profile Payments tab shows party payments', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(420, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          partyProvider.overrideWith(
+            (ref, partyId) => Stream.value(testParty()),
+          ),
+          partyStatsProvider.overrideWith(
+            (ref, partyId) => const PartyStats(
+              dealCount: 1,
+              pendingAmountPaise: 3400000,
+            ),
+          ),
+          paymentListProvider.overrideWith(
+            (ref, query) => Stream.value([
+              testPaymentListItem(),
+            ]),
+          ),
+        ],
+        child: MaterialApp(
+          theme: KajuTheme.dark(),
+          home: const PersonProfileScreen(
+            partyId: 'party-1',
+            initialTabIndex: 1,
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.drag(find.byType(ListView).first, const Offset(0, -520));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byKey(const Key('profile-payment-payment-1')), findsOneWidget);
+    expect(find.textContaining('5,000'), findsWidgets);
   });
 }
 
@@ -270,6 +323,45 @@ Deal testDeal({String cashewGrade = 'W320'}) {
     paymentDue: null,
     notes: null,
     syncId: 'sync-1',
+    createdAt: now,
+    updatedAt: now,
+    deletedAt: null,
+  );
+}
+
+PaymentListItem testPaymentListItem() {
+  return PaymentListItem(
+    payment: testPayment(),
+    party: const PaymentPartySummary(
+      id: 'party-1',
+      name: 'Amit Verma',
+      type: 'CUSTOMER',
+      trustTag: 'NEW',
+    ),
+    deal: const PaymentDealSummary(
+      id: 'deal-1',
+      partyId: 'party-1',
+      type: 'SALE',
+      cashewGrade: 'W320',
+      totalPaise: 3900000,
+      paidPaise: 500000,
+    ),
+  );
+}
+
+Payment testPayment() {
+  final now = DateTime.now().toUtc();
+  return Payment(
+    id: 'payment-1',
+    userId: 'local-owner',
+    partyId: 'party-1',
+    dealId: 'deal-1',
+    type: PaymentTypeValue.received.apiValue,
+    amountPaise: 500000,
+    method: 'Cash',
+    notes: null,
+    paymentDate: now,
+    syncId: 'payment-sync-1',
     createdAt: now,
     updatedAt: now,
     deletedAt: null,
