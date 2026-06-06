@@ -97,6 +97,7 @@ class Expenses extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
   TextColumn get category => text()();
+  TextColumn get scope => text().withDefault(const Constant('BUSINESS'))();
   IntColumn get amountPaise => integer()();
   TextColumn get notes => text().nullable()();
   DateTimeColumn get expenseDate => dateTime()();
@@ -192,7 +193,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? driftDatabase(name: 'kajupilot'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -200,6 +201,9 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (migrator, from, to) async {
           if (from < 2) {
             await migrator.createTable(dealItems);
+          }
+          if (from < 3) {
+            await migrator.addColumn(expenses, expenses.scope);
           }
         },
       );

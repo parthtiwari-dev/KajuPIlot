@@ -153,6 +153,7 @@ model Expense {
   userId      String
   user        User            @relation(fields: [userId], references: [id])
   category    ExpenseCategory
+  scope       ExpenseScope    @default(BUSINESS)
   amount      Decimal         @db.Decimal(14, 2)
   notes       String?
   expenseDate DateTime
@@ -162,6 +163,7 @@ model Expense {
   deletedAt   DateTime?
 
   @@index([userId, expenseDate, deletedAt])
+  @@index([userId, scope, expenseDate, deletedAt])
 }
 
 enum ExpenseCategory {
@@ -171,6 +173,11 @@ enum ExpenseCategory {
   BROKER_COMMISSION
   STOCK_PURCHASE
   OTHER
+}
+
+enum ExpenseScope {
+  BUSINESS
+  PERSONAL
 }
 
 model Task {

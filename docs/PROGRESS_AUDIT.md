@@ -2,7 +2,7 @@
 
 Date: 2026-06-07
 Branch: `main`
-Status: Phase 1D Money, Payments, and Expenses implemented and verified; People/Deals remain live; APK debug build passes; phone smoke is next
+Status: Phase 1D.1 personal/business expense split implemented and verified; Money is ready for IQOO smoke before Phase 1E
 
 ## Branch And Repo
 
@@ -224,6 +224,22 @@ Status: Phase 1D Money, Payments, and Expenses implemented and verified; People/
 | Update local People stats for party-level payments | Done |
 | Keep AI parsing, Tasks, Calls, Reports, Admin out | Done |
 
+## Phase 1D.1 Checklist
+
+| Task | Result |
+|---|---|
+| Add expense business/personal scope | Done |
+| Default existing expenses to business | Done, backend and Drift defaults are `BUSINESS` |
+| Add Prisma migration for expense scope | Done |
+| Add Drift migration for expense scope | Done, schema version bumped to 3 |
+| Add API expense scope filter | Done |
+| Add API expense summary by scope | Done |
+| Add Flutter expense scope enum/models | Done |
+| Add Expense sheet scope selector | Done, Business/Personal segmented control |
+| Add Money Expenses scope filter | Done: All, Business, Personal |
+| Split expense summary into Business and Personal totals | Done |
+| Keep budgets/accounts/advanced reports out | Done |
+
 ## Phase 0 App Shell Lock
 
 | Task | Result |
@@ -396,6 +412,7 @@ Status: Phase 1D Money, Payments, and Expenses implemented and verified; People/
 | `npm.cmd audit` in admin | Pass, 0 vulnerabilities |
 | `docker compose --env-file .env.example config` | Pass |
 | `make health` | Pass, API health and AI provider config returned successfully |
+| `make migrate` | Pass, applied `20260607160000_add_expense_scope` |
 | Docker API rebuild | Pass with `docker compose ... build api` |
 | Docker dev stack restart | Pass with `docker compose ... up -d postgres redis api admin` |
 | Authenticated Parties route smoke | Pass, `GET /api/v1/parties` returned successfully |
@@ -403,6 +420,7 @@ Status: Phase 1D Money, Payments, and Expenses implemented and verified; People/
 | Authenticated bucket-wise Deal create smoke | Pass, created deal with item `10 balti` and pending total |
 | Authenticated Payments route smoke | Pass, linked payment updated deal paid amount |
 | Authenticated Expenses route smoke | Pass, expense create and summary returned successfully |
+| Authenticated personal expense smoke | Pass, `scope=PERSONAL` create and scoped summary returned successfully |
 | Android contact picker bridge compile | Pass through debug APK build |
 | Manual APK install/run | Pass, user confirmed IQOO opens app UI |
 | Manual setup flow against live backend | Pending latest Phase 1C physical-device deals smoke |
@@ -438,6 +456,7 @@ Status: Phase 1D Money, Payments, and Expenses implemented and verified; People/
 | Money tab was still a placeholder | Replaced it with receivable, payable, and expense workflows |
 | Payment records could double-count deal balances | Linked payments now mutate deal paid amount; party-level credits reduce party balances only |
 | Party ledger ignored unlinked payments | Party ledger and local stats now include party-level payment credits |
+| Personal expenses could pollute business expense totals | Added Business/Personal expense scope and split summaries |
 
 ## Upgrade Notes
 
@@ -562,6 +581,17 @@ Status: Phase 1D Money, Payments, and Expenses implemented and verified; People/
 | People integration | Person profile Payments tab shows local payments filtered by `partyId` |
 | Phase boundary | Tasks, Calls, AI parsing, Reports, and Admin remain out of Phase 1D |
 
+## Phase 1D.1 Data Decisions
+
+| Item | Decision |
+|---|---|
+| Expense scope | Every expense is either `BUSINESS` or `PERSONAL` |
+| Default scope | Existing and new default expenses are `BUSINESS` |
+| Business reporting | Business expenses stay clean for future profit/report calculations |
+| Personal reporting | Personal expenses can be tracked without creating parties/deals |
+| UI surface | Scope is a segmented control in Add/Edit Expense and filter chips in Money |
+| Overbuild boundary | No budgets, wallets, bank accounts, recurring rules, or advanced charts yet |
+
 ## Next Step
 
-Smoke Phase 1D on the IQOO: rebuild/restart Docker, run `make run`, create or reuse a person and deal, add a linked received payment, confirm pending decreases, add a party-level payment, add an expense, relaunch, pull refresh, and test delete plus undo.
+Smoke Phase 1D.1 on the IQOO: run `make run`, add one Business expense and one Personal expense, confirm the Money summary splits them, filter Personal only, relaunch, pull refresh, and test delete plus undo. After that, move to Phase 1E.

@@ -32,6 +32,7 @@ class _ExpenseSheetState extends ConsumerState<ExpenseSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _amountController;
   late final TextEditingController _notesController;
+  late ExpenseScopeValue _scope;
   late ExpenseCategoryValue _category;
   DateTime _expenseDate = DateTime.now();
   var _isSaving = false;
@@ -42,6 +43,9 @@ class _ExpenseSheetState extends ConsumerState<ExpenseSheet> {
   void initState() {
     super.initState();
     final expense = widget.expense;
+    _scope = expense == null
+        ? ExpenseScopeValue.business
+        : ExpenseScopeValue.fromApi(expense.scope);
     _category = expense == null
         ? ExpenseCategoryValue.transport
         : ExpenseCategoryValue.fromApi(expense.category);
@@ -119,6 +123,18 @@ class _ExpenseSheetState extends ConsumerState<ExpenseSheet> {
                     ],
                   ),
                   const SizedBox(height: KajuSpacing.lg),
+                  SegmentedButton<ExpenseScopeValue>(
+                    key: const Key('expense-scope-field'),
+                    segments: [
+                      for (final scope in ExpenseScopeValue.values)
+                        ButtonSegment(value: scope, label: Text(scope.label)),
+                    ],
+                    selected: {_scope},
+                    onSelectionChanged: (selection) {
+                      setState(() => _scope = selection.single);
+                    },
+                  ),
+                  const SizedBox(height: KajuSpacing.md),
                   DropdownButtonFormField<ExpenseCategoryValue>(
                     key: const Key('expense-category-field'),
                     value: _category,
@@ -201,6 +217,7 @@ class _ExpenseSheetState extends ConsumerState<ExpenseSheet> {
         await repository.update(
           widget.expense!.id,
           UpdateExpenseInput(
+            scope: _scope,
             category: _category,
             amountPaise: amountPaise,
             expenseDate: _expenseDate,
@@ -210,6 +227,7 @@ class _ExpenseSheetState extends ConsumerState<ExpenseSheet> {
       } else {
         await repository.create(
           CreateExpenseInput(
+            scope: _scope,
             category: _category,
             amountPaise: amountPaise,
             expenseDate: _expenseDate,

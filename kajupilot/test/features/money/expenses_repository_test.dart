@@ -45,6 +45,7 @@ void main() {
 
       await repository.create(
         CreateExpenseInput(
+          scope: ExpenseScopeValue.personal,
           category: ExpenseCategoryValue.transport,
           amountPaise: 125000,
           expenseDate: DateTime.utc(2026, 6, 7),
@@ -57,9 +58,11 @@ void main() {
       final summary = await repository.localSummary(const ExpenseListQuery());
 
       expect(expense.category, 'TRANSPORT');
+      expect(expense.scope, 'PERSONAL');
       expect(expense.amountPaise, 125000);
       expect(summary.totalPaise, 125000);
       expect(summary.byCategoryPaise[ExpenseCategoryValue.transport], 125000);
+      expect(summary.byScopePaise[ExpenseScopeValue.personal], 125000);
       expect(pending.single.entityType, PendingSyncEntityType.expense.name);
     });
 
@@ -77,6 +80,7 @@ void main() {
       await repository.update(
         'expense-1',
         UpdateExpenseInput(
+          scope: ExpenseScopeValue.business,
           category: ExpenseCategoryValue.labour,
           amountPaise: 220000,
           expenseDate: DateTime.utc(2026, 6, 8),
@@ -89,6 +93,7 @@ void main() {
       final pending = await database.select(database.pendingSync).get();
 
       expect(expense.category, 'LABOUR');
+      expect(expense.scope, 'BUSINESS');
       expect(expense.amountPaise, 220000);
       expect(expense.deletedAt, isNotNull);
       expect(pending.map((entry) => entry.action), contains('update'));
@@ -119,6 +124,7 @@ class FakeExpensesApi extends ExpensesApi {
       userId: 'server-user',
       syncId: syncId,
       category: input.category.apiValue,
+      scope: input.scope.apiValue,
       amountPaise: input.amountPaise,
       expenseDate: input.expenseDate,
       notes: input.notes,
@@ -135,6 +141,7 @@ class FakeExpensesApi extends ExpensesApi {
       id: id,
       userId: 'server-user',
       category: input.category.apiValue,
+      scope: input.scope.apiValue,
       amountPaise: input.amountPaise,
       expenseDate: input.expenseDate,
       notes: input.notes,
@@ -156,6 +163,7 @@ Expense testExpense({
   String userId = 'local-owner',
   String syncId = 'sync-1',
   String category = 'TRANSPORT',
+  String scope = 'BUSINESS',
   int amountPaise = 125000,
   DateTime? expenseDate,
   String? notes,
@@ -166,6 +174,7 @@ Expense testExpense({
     id: id,
     userId: userId,
     category: category,
+    scope: scope,
     amountPaise: amountPaise,
     notes: notes,
     expenseDate: expenseDate ?? now,

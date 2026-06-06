@@ -1,5 +1,5 @@
 import { BadRequestException, UnauthorizedException } from "@nestjs/common";
-import { ExpenseCategory, Prisma, Role } from "@prisma/client";
+import { ExpenseCategory, ExpenseScope, Prisma, Role } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { ExpensesService } from "./expenses.service";
 
@@ -46,6 +46,7 @@ describe("ExpensesService", () => {
         id: "expense-1",
         userId: "user-1",
         category: ExpenseCategory.TRANSPORT,
+        scope: ExpenseScope.BUSINESS,
         amount: new Prisma.Decimal("1250.00"),
         syncId: "sync-1",
       }),
@@ -54,6 +55,7 @@ describe("ExpensesService", () => {
       id: "expense-1",
       amount: "1250.00",
       category: ExpenseCategory.TRANSPORT,
+      scope: ExpenseScope.BUSINESS,
     });
   });
 
@@ -93,11 +95,13 @@ describe("ExpensesService", () => {
 
     const updated = await service.update(user, "expense-1", {
       category: ExpenseCategory.LABOUR,
+      scope: ExpenseScope.PERSONAL,
       amount: "2200.00",
     });
     const deleted = await service.remove(user, "expense-1");
 
     expect(updated.category).toBe(ExpenseCategory.LABOUR);
+    expect(updated.scope).toBe(ExpenseScope.PERSONAL);
     expect(updated.amount).toBe("2200.00");
     expect(deleted.deletedAt).toEqual(expect.any(String));
   });
@@ -106,10 +110,12 @@ describe("ExpensesService", () => {
     prisma.expense.findMany.mockResolvedValueOnce([
       expense({
         category: ExpenseCategory.TRANSPORT,
+        scope: ExpenseScope.BUSINESS,
         amount: new Prisma.Decimal("100.00"),
       }),
       expense({
         category: ExpenseCategory.LABOUR,
+        scope: ExpenseScope.PERSONAL,
         amount: new Prisma.Decimal("250.00"),
       }),
     ]);
@@ -121,6 +127,10 @@ describe("ExpensesService", () => {
         TRANSPORT: "100.00",
         LABOUR: "250.00",
       },
+      byScope: {
+        BUSINESS: "100.00",
+        PERSONAL: "250.00",
+      },
     });
   });
 });
@@ -129,6 +139,7 @@ function createDto(overrides: Record<string, unknown> = {}) {
   return {
     id: "expense-1",
     category: ExpenseCategory.TRANSPORT,
+    scope: ExpenseScope.BUSINESS,
     amount: "1250.00",
     expenseDate: "2026-06-07T00:00:00.000Z",
     notes: "Truck",
@@ -143,6 +154,7 @@ function expense(overrides: Record<string, unknown> = {}) {
     id: "expense-1",
     userId: "user-1",
     category: ExpenseCategory.TRANSPORT,
+    scope: ExpenseScope.BUSINESS,
     amount: new Prisma.Decimal("1250.00"),
     notes: "Truck",
     expenseDate: now,

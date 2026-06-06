@@ -9,6 +9,7 @@ class ExpensesApi {
   final KajuApiClient _apiClient;
 
   Future<List<Expense>> list({
+    ExpenseScopeValue? scope,
     ExpenseCategoryValue? category,
     DateTime? from,
     DateTime? to,
@@ -16,6 +17,7 @@ class ExpensesApi {
     final response = await _apiClient.get<List<dynamic>>(
       '/expenses',
       queryParameters: {
+        if (scope != null) 'scope': scope.apiValue,
         if (category != null) 'category': category.apiValue,
         if (from != null) 'from': from.toUtc().toIso8601String(),
         if (to != null) 'to': to.toUtc().toIso8601String(),
@@ -56,6 +58,7 @@ class ExpensesApi {
   }
 
   Future<ExpenseSummary> summary({
+    ExpenseScopeValue? scope,
     ExpenseCategoryValue? category,
     DateTime? from,
     DateTime? to,
@@ -63,6 +66,7 @@ class ExpensesApi {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/expenses/summary',
       queryParameters: {
+        if (scope != null) 'scope': scope.apiValue,
         if (category != null) 'category': category.apiValue,
         if (from != null) 'from': from.toUtc().toIso8601String(),
         if (to != null) 'to': to.toUtc().toIso8601String(),
@@ -70,11 +74,16 @@ class ExpensesApi {
     );
     final data = response.data ?? <String, dynamic>{};
     final byCategory = data['byCategory'] as Map<String, dynamic>? ?? {};
+    final byScope = data['byScope'] as Map<String, dynamic>? ?? {};
 
     return ExpenseSummary(
       byCategoryPaise: {
         for (final category in ExpenseCategoryValue.values)
           category: decimalRupeesToPaise(byCategory[category.apiValue]),
+      },
+      byScopePaise: {
+        for (final scope in ExpenseScopeValue.values)
+          scope: decimalRupeesToPaise(byScope[scope.apiValue]),
       },
       totalPaise: decimalRupeesToPaise(data['total']),
       periodComparison: (data['periodComparison'] as num?)?.toDouble() ?? 0,
@@ -87,6 +96,7 @@ Expense expenseFromJson(Map<String, dynamic> json) {
     id: json['id'] as String,
     userId: json['userId'] as String,
     category: json['category'] as String,
+    scope: json['scope'] as String? ?? ExpenseScopeValue.business.apiValue,
     amountPaise: decimalRupeesToPaise(json['amount']),
     notes: json['notes'] as String?,
     expenseDate: DateTime.parse(json['expenseDate'] as String).toUtc(),
@@ -106,6 +116,7 @@ Map<String, Object?> expenseCreatePayload({
     'id': id,
     'syncId': syncId,
     'category': input.category.apiValue,
+    'scope': input.scope.apiValue,
     'amount': paiseToDecimalRupeesString(input.amountPaise),
     'expenseDate': input.expenseDate.toUtc().toIso8601String(),
     'notes': input.notes,
@@ -115,6 +126,7 @@ Map<String, Object?> expenseCreatePayload({
 Map<String, Object?> expenseUpdatePayload(UpdateExpenseInput input) {
   final payload = {
     'category': input.category.apiValue,
+    'scope': input.scope.apiValue,
     'amount': paiseToDecimalRupeesString(input.amountPaise),
     'expenseDate': input.expenseDate.toUtc().toIso8601String(),
     'notes': input.notes,

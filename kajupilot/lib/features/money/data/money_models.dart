@@ -46,6 +46,23 @@ enum ExpenseCategoryValue {
   }
 }
 
+enum ExpenseScopeValue {
+  business('BUSINESS', 'Business'),
+  personal('PERSONAL', 'Personal');
+
+  const ExpenseScopeValue(this.apiValue, this.label);
+
+  final String apiValue;
+  final String label;
+
+  static ExpenseScopeValue fromApi(String value) {
+    return ExpenseScopeValue.values.firstWhere(
+      (scope) => scope.apiValue == value,
+      orElse: () => ExpenseScopeValue.business,
+    );
+  }
+}
+
 class PaymentListQuery {
   const PaymentListQuery({
     this.partyId,
@@ -77,11 +94,13 @@ class PaymentListQuery {
 
 class ExpenseListQuery {
   const ExpenseListQuery({
+    this.scope,
     this.category,
     this.from,
     this.to,
   });
 
+  final ExpenseScopeValue? scope;
   final ExpenseCategoryValue? category;
   final DateTime? from;
   final DateTime? to;
@@ -89,13 +108,14 @@ class ExpenseListQuery {
   @override
   bool operator ==(Object other) {
     return other is ExpenseListQuery &&
+        other.scope == scope &&
         other.category == category &&
         other.from == from &&
         other.to == to;
   }
 
   @override
-  int get hashCode => Object.hash(category, from, to);
+  int get hashCode => Object.hash(scope, category, from, to);
 }
 
 class PaymentPartySummary {
@@ -262,12 +282,14 @@ class UpdatePaymentInput {
 
 class CreateExpenseInput {
   const CreateExpenseInput({
+    this.scope = ExpenseScopeValue.business,
     required this.category,
     required this.amountPaise,
     required this.expenseDate,
     this.notes,
   });
 
+  final ExpenseScopeValue scope;
   final ExpenseCategoryValue category;
   final int amountPaise;
   final DateTime expenseDate;
@@ -276,12 +298,14 @@ class CreateExpenseInput {
 
 class UpdateExpenseInput {
   const UpdateExpenseInput({
+    required this.scope,
     required this.category,
     required this.amountPaise,
     required this.expenseDate,
     this.notes,
   });
 
+  final ExpenseScopeValue scope;
   final ExpenseCategoryValue category;
   final int amountPaise;
   final DateTime expenseDate;
@@ -341,6 +365,7 @@ class MoneyLedgerParty {
 class ExpenseSummary {
   const ExpenseSummary({
     required this.byCategoryPaise,
+    required this.byScopePaise,
     required this.totalPaise,
     required this.periodComparison,
   });
@@ -350,12 +375,16 @@ class ExpenseSummary {
       byCategoryPaise: {
         for (final category in ExpenseCategoryValue.values) category: 0,
       },
+      byScopePaise: {
+        for (final scope in ExpenseScopeValue.values) scope: 0,
+      },
       totalPaise: 0,
       periodComparison: 0,
     );
   }
 
   final Map<ExpenseCategoryValue, int> byCategoryPaise;
+  final Map<ExpenseScopeValue, int> byScopePaise;
   final int totalPaise;
   final double periodComparison;
 }

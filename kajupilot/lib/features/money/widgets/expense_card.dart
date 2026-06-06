@@ -23,6 +23,7 @@ class ExpenseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.kajuColors;
     final category = ExpenseCategoryValue.fromApi(expense.category);
+    final scope = ExpenseScopeValue.fromApi(expense.scope);
 
     return KajuCard(
       onTap: onTap,
@@ -37,8 +38,12 @@ class ExpenseCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-              const StatusBadge(
-                  label: 'Expense', tone: StatusBadgeTone.warning),
+              StatusBadge(
+                label: scope.label,
+                tone: scope == ExpenseScopeValue.business
+                    ? StatusBadgeTone.warning
+                    : StatusBadgeTone.info,
+              ),
             ],
           ),
           const SizedBox(height: KajuSpacing.md),

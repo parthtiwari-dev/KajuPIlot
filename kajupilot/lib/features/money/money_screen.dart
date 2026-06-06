@@ -302,9 +302,42 @@ class _ExpensesTab extends ConsumerWidget {
             child: Row(
               children: [
                 FilterChip(
-                  selected: query.category == null,
+                  key: const Key('expense-scope-all'),
+                  selected: query.scope == null,
                   label: const Text('All'),
-                  onSelected: (_) => onQueryChanged(const ExpenseListQuery()),
+                  onSelected: (_) => onQueryChanged(
+                    ExpenseListQuery(category: query.category),
+                  ),
+                ),
+                const SizedBox(width: KajuSpacing.sm),
+                for (final scope in ExpenseScopeValue.values) ...[
+                  FilterChip(
+                    key: Key('expense-scope-${scope.name}'),
+                    selected: query.scope == scope,
+                    label: Text(scope.label),
+                    onSelected: (_) => onQueryChanged(
+                      ExpenseListQuery(
+                        scope: scope,
+                        category: query.category,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: KajuSpacing.sm),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: KajuSpacing.sm),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                FilterChip(
+                  selected: query.category == null,
+                  label: const Text('All categories'),
+                  onSelected: (_) => onQueryChanged(
+                    ExpenseListQuery(scope: query.scope),
+                  ),
                 ),
                 const SizedBox(width: KajuSpacing.sm),
                 for (final category in ExpenseCategoryValue.values) ...[
@@ -312,7 +345,10 @@ class _ExpensesTab extends ConsumerWidget {
                     selected: query.category == category,
                     label: Text(category.label),
                     onSelected: (_) => onQueryChanged(
-                      ExpenseListQuery(category: category),
+                      ExpenseListQuery(
+                        scope: query.scope,
+                        category: category,
+                      ),
                     ),
                   ),
                   const SizedBox(width: KajuSpacing.sm),
@@ -339,7 +375,9 @@ class _ExpensesTab extends ConsumerWidget {
                 return KajuEmptyState(
                   icon: Icons.receipt_long_outlined,
                   title: query.category == null
-                      ? 'No expenses yet'
+                      ? query.scope == null
+                          ? 'No expenses yet'
+                          : 'No ${query.scope!.label.toLowerCase()} expenses'
                       : 'No expenses in this category',
                   body: 'Add transport, labour, packaging, or other costs.',
                   action: FilledButton.icon(
@@ -425,6 +463,25 @@ class _ExpenseSummaryCard extends StatelessWidget {
             tone: AmountDisplayTone.pending,
             size: AmountDisplaySize.large,
           ),
+          const SizedBox(height: KajuSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: _ScopeAmount(
+                  label: 'Business',
+                  amountPaise:
+                      summary.byScopePaise[ExpenseScopeValue.business] ?? 0,
+                ),
+              ),
+              Expanded(
+                child: _ScopeAmount(
+                  label: 'Personal',
+                  amountPaise:
+                      summary.byScopePaise[ExpenseScopeValue.personal] ?? 0,
+                ),
+              ),
+            ],
+          ),
           if (topCategories.isNotEmpty) ...[
             const SizedBox(height: KajuSpacing.md),
             Wrap(
@@ -443,6 +500,32 @@ class _ExpenseSummaryCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _ScopeAmount extends StatelessWidget {
+  const _ScopeAmount({
+    required this.label,
+    required this.amountPaise,
+  });
+
+  final String label;
+  final int amountPaise;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.labelSmall),
+        const SizedBox(height: KajuSpacing.xs),
+        AmountDisplay(
+          amountPaise: amountPaise,
+          tone: AmountDisplayTone.pending,
+          size: AmountDisplaySize.small,
+        ),
+      ],
     );
   }
 }

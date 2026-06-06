@@ -57,6 +57,9 @@ class ExpensesRepository {
     return (_database.select(_database.expenses)
           ..where((row) {
             var expression = row.deletedAt.isNull();
+            if (query.scope != null) {
+              expression = expression & row.scope.equals(query.scope!.apiValue);
+            }
             if (query.category != null) {
               expression =
                   expression & row.category.equals(query.category!.apiValue);
@@ -106,6 +109,7 @@ class ExpensesRepository {
       id: id,
       userId: _currentUserId,
       category: input.category.apiValue,
+      scope: input.scope.apiValue,
       amountPaise: input.amountPaise,
       notes: _clean(input.notes),
       expenseDate: input.expenseDate.toUtc(),
@@ -147,6 +151,7 @@ class ExpensesRepository {
     final now = DateTime.now().toUtc();
     final updated = existing.copyWith(
       category: input.category.apiValue,
+      scope: input.scope.apiValue,
       amountPaise: input.amountPaise,
       notes: Value(_clean(input.notes)),
       expenseDate: input.expenseDate.toUtc(),
@@ -216,6 +221,7 @@ class ExpensesRepository {
 
     final input = CreateExpenseInput(
       category: ExpenseCategoryValue.fromApi(restored.category),
+      scope: ExpenseScopeValue.fromApi(restored.scope),
       amountPaise: restored.amountPaise,
       expenseDate: restored.expenseDate,
       notes: restored.notes,
@@ -244,6 +250,7 @@ class ExpensesRepository {
       {ExpenseListQuery query = const ExpenseListQuery()}) async {
     await flushPendingExpenseSync();
     final remoteExpenses = await _api.list(
+      scope: query.scope,
       category: query.category,
       from: query.from,
       to: query.to,
@@ -293,6 +300,9 @@ class ExpensesRepository {
     final expenses = await (_database.select(_database.expenses)
           ..where((row) {
             var expression = row.deletedAt.isNull();
+            if (query.scope != null) {
+              expression = expression & row.scope.equals(query.scope!.apiValue);
+            }
             if (query.category != null) {
               expression =
                   expression & row.category.equals(query.category!.apiValue);
@@ -312,15 +322,21 @@ class ExpensesRepository {
     final byCategory = {
       for (final category in ExpenseCategoryValue.values) category: 0,
     };
+    final byScope = {
+      for (final scope in ExpenseScopeValue.values) scope: 0,
+    };
     var total = 0;
     for (final expense in expenses) {
       final category = ExpenseCategoryValue.fromApi(expense.category);
+      final scope = ExpenseScopeValue.fromApi(expense.scope);
       byCategory[category] = byCategory[category]! + expense.amountPaise;
+      byScope[scope] = byScope[scope]! + expense.amountPaise;
       total += expense.amountPaise;
     }
 
     return ExpenseSummary(
       byCategoryPaise: byCategory,
+      byScopePaise: byScope,
       totalPaise: total,
       periodComparison: 0,
     );
@@ -386,6 +402,9 @@ class ExpensesRepository {
   CreateExpenseInput _createInputFromPayload(Map<String, dynamic> payload) {
     return CreateExpenseInput(
       category: ExpenseCategoryValue.fromApi(payload['category'] as String),
+      scope: ExpenseScopeValue.fromApi(
+        payload['scope'] as String? ?? ExpenseScopeValue.business.apiValue,
+      ),
       amountPaise: moneyTextToPaise(payload['amount'] as String),
       expenseDate: DateTime.parse(payload['expenseDate'] as String).toUtc(),
       notes: payload['notes'] as String?,
@@ -395,6 +414,9 @@ class ExpensesRepository {
   UpdateExpenseInput _updateInputFromPayload(Map<String, dynamic> payload) {
     return UpdateExpenseInput(
       category: ExpenseCategoryValue.fromApi(payload['category'] as String),
+      scope: ExpenseScopeValue.fromApi(
+        payload['scope'] as String? ?? ExpenseScopeValue.business.apiValue,
+      ),
       amountPaise: moneyTextToPaise(payload['amount'] as String),
       expenseDate: DateTime.parse(payload['expenseDate'] as String).toUtc(),
       notes: payload['notes'] as String?,

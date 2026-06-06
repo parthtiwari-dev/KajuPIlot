@@ -7,7 +7,7 @@ import {
   Matches,
   MaxLength,
 } from "class-validator";
-import { ExpenseCategory } from "@prisma/client";
+import { ExpenseCategory, ExpenseScope } from "@prisma/client";
 
 const decimalPattern = /^\d+(\.\d{1,2})?$/;
 
@@ -18,6 +18,10 @@ export class CreateExpenseDto {
 
   @IsEnum(ExpenseCategory)
   category!: ExpenseCategory;
+
+  @IsOptional()
+  @IsEnum(ExpenseScope)
+  scope?: ExpenseScope;
 
   @IsString()
   @Matches(decimalPattern)

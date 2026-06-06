@@ -4,7 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { Expense, ExpenseCategory, Prisma } from "@prisma/client";
+import { Expense, ExpenseCategory, ExpenseScope, Prisma } from "@prisma/client";
 import { randomUUID } from "crypto";
 import { AuthenticatedUser } from "../auth/types/authenticated-user";
 import { PrismaService } from "../prisma/prisma.service";
@@ -41,6 +41,7 @@ export class ExpensesService {
           where: { id: existing.id },
           data: {
             category: dto.category,
+            scope: dto.scope ?? existing.scope,
             amount: this.decimal(dto.amount),
             notes: this.cleanNullable(dto.notes),
             expenseDate: new Date(dto.expenseDate),
@@ -59,6 +60,7 @@ export class ExpensesService {
         id: dto.id ?? randomUUID(),
         userId: user.id,
         category: dto.category,
+        scope: dto.scope ?? ExpenseScope.BUSINESS,
         amount: this.decimal(dto.amount),
         notes: this.cleanNullable(dto.notes),
         expenseDate: new Date(dto.expenseDate),
@@ -79,6 +81,7 @@ export class ExpensesService {
       where: { id },
       data: {
         ...(dto.category !== undefined ? { category: dto.category } : {}),
+        ...(dto.scope !== undefined ? { scope: dto.scope } : {}),
         ...(dto.amount !== undefined
           ? { amount: this.decimal(dto.amount) }
           : {}),
@@ -107,10 +110,13 @@ export class ExpensesService {
   async summary(user: AuthenticatedUser, query: ListExpensesDto) {
     const expenses = await this.prisma.expense.findMany({
       where: this.where(user.id, query),
-      select: { category: true, amount: true },
+      select: { category: true, scope: true, amount: true },
     });
     const byCategory = Object.fromEntries(
       ExpenseCategoryValues.map((category) => [category, "0.00"]),
+    );
+    const byScope = Object.fromEntries(
+      ExpenseScopeValues.map((scope) => [scope, "0.00"]),
     );
     let total = new Prisma.Decimal(0);
 
@@ -122,10 +128,14 @@ export class ExpensesService {
       )
         .plus(amount)
         .toFixed(2);
+      byScope[expense.scope] = new Prisma.Decimal(byScope[expense.scope])
+        .plus(amount)
+        .toFixed(2);
     }
 
     return {
       byCategory,
+      byScope,
       total: total.toFixed(2),
       periodComparison: await this.periodComparison(user.id, query, total),
     };
@@ -148,6 +158,7 @@ export class ExpensesService {
       userId,
       deletedAt: null,
       ...(query.category ? { category: query.category } : {}),
+      ...(query.scope ? { scope: query.scope } : {}),
       ...(query.from || query.to
         ? {
             expenseDate: {
@@ -182,6 +193,7 @@ export class ExpensesService {
         userId,
         deletedAt: null,
         ...(query.category ? { category: query.category } : {}),
+        ...(query.scope ? { scope: query.scope } : {}),
         expenseDate: {
           gte: previousFrom,
           lt: previousTo,
@@ -212,6 +224,7 @@ export class ExpensesService {
       id: expense.id,
       userId: expense.userId,
       category: expense.category,
+      scope: expense.scope,
       amount: this.decimalString(expense.amount),
       notes: expense.notes,
       expenseDate: expense.expenseDate.toISOString(),
@@ -243,3 +256,4 @@ export class ExpensesService {
 }
 
 const ExpenseCategoryValues = Object.values(ExpenseCategory);
+const ExpenseScopeValues = Object.values(ExpenseScope);

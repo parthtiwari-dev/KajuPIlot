@@ -2864,6 +2864,13 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
   late final GeneratedColumn<String> category = GeneratedColumn<String>(
       'category', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _scopeMeta = const VerificationMeta('scope');
+  @override
+  late final GeneratedColumn<String> scope = GeneratedColumn<String>(
+      'scope', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('BUSINESS'));
   static const VerificationMeta _amountPaiseMeta =
       const VerificationMeta('amountPaise');
   @override
@@ -2911,6 +2918,7 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
         id,
         userId,
         category,
+        scope,
         amountPaise,
         notes,
         expenseDate,
@@ -2945,6 +2953,10 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
           category.isAcceptableOrUnknown(data['category']!, _categoryMeta));
     } else if (isInserting) {
       context.missing(_categoryMeta);
+    }
+    if (data.containsKey('scope')) {
+      context.handle(
+          _scopeMeta, scope.isAcceptableOrUnknown(data['scope']!, _scopeMeta));
     }
     if (data.containsKey('amount_paise')) {
       context.handle(
@@ -3003,6 +3015,8 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
           .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
       category: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}category'])!,
+      scope: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}scope'])!,
       amountPaise: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}amount_paise'])!,
       notes: attachedDatabase.typeMapping
@@ -3030,6 +3044,7 @@ class Expense extends DataClass implements Insertable<Expense> {
   final String id;
   final String userId;
   final String category;
+  final String scope;
   final int amountPaise;
   final String? notes;
   final DateTime expenseDate;
@@ -3041,6 +3056,7 @@ class Expense extends DataClass implements Insertable<Expense> {
       {required this.id,
       required this.userId,
       required this.category,
+      required this.scope,
       required this.amountPaise,
       this.notes,
       required this.expenseDate,
@@ -3054,6 +3070,7 @@ class Expense extends DataClass implements Insertable<Expense> {
     map['id'] = Variable<String>(id);
     map['user_id'] = Variable<String>(userId);
     map['category'] = Variable<String>(category);
+    map['scope'] = Variable<String>(scope);
     map['amount_paise'] = Variable<int>(amountPaise);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
@@ -3073,6 +3090,7 @@ class Expense extends DataClass implements Insertable<Expense> {
       id: Value(id),
       userId: Value(userId),
       category: Value(category),
+      scope: Value(scope),
       amountPaise: Value(amountPaise),
       notes:
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
@@ -3093,6 +3111,7 @@ class Expense extends DataClass implements Insertable<Expense> {
       id: serializer.fromJson<String>(json['id']),
       userId: serializer.fromJson<String>(json['userId']),
       category: serializer.fromJson<String>(json['category']),
+      scope: serializer.fromJson<String>(json['scope']),
       amountPaise: serializer.fromJson<int>(json['amountPaise']),
       notes: serializer.fromJson<String?>(json['notes']),
       expenseDate: serializer.fromJson<DateTime>(json['expenseDate']),
@@ -3109,6 +3128,7 @@ class Expense extends DataClass implements Insertable<Expense> {
       'id': serializer.toJson<String>(id),
       'userId': serializer.toJson<String>(userId),
       'category': serializer.toJson<String>(category),
+      'scope': serializer.toJson<String>(scope),
       'amountPaise': serializer.toJson<int>(amountPaise),
       'notes': serializer.toJson<String?>(notes),
       'expenseDate': serializer.toJson<DateTime>(expenseDate),
@@ -3123,6 +3143,7 @@ class Expense extends DataClass implements Insertable<Expense> {
           {String? id,
           String? userId,
           String? category,
+          String? scope,
           int? amountPaise,
           Value<String?> notes = const Value.absent(),
           DateTime? expenseDate,
@@ -3134,6 +3155,7 @@ class Expense extends DataClass implements Insertable<Expense> {
         id: id ?? this.id,
         userId: userId ?? this.userId,
         category: category ?? this.category,
+        scope: scope ?? this.scope,
         amountPaise: amountPaise ?? this.amountPaise,
         notes: notes.present ? notes.value : this.notes,
         expenseDate: expenseDate ?? this.expenseDate,
@@ -3147,6 +3169,7 @@ class Expense extends DataClass implements Insertable<Expense> {
       id: data.id.present ? data.id.value : this.id,
       userId: data.userId.present ? data.userId.value : this.userId,
       category: data.category.present ? data.category.value : this.category,
+      scope: data.scope.present ? data.scope.value : this.scope,
       amountPaise:
           data.amountPaise.present ? data.amountPaise.value : this.amountPaise,
       notes: data.notes.present ? data.notes.value : this.notes,
@@ -3165,6 +3188,7 @@ class Expense extends DataClass implements Insertable<Expense> {
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('category: $category, ')
+          ..write('scope: $scope, ')
           ..write('amountPaise: $amountPaise, ')
           ..write('notes: $notes, ')
           ..write('expenseDate: $expenseDate, ')
@@ -3177,8 +3201,8 @@ class Expense extends DataClass implements Insertable<Expense> {
   }
 
   @override
-  int get hashCode => Object.hash(id, userId, category, amountPaise, notes,
-      expenseDate, syncId, createdAt, updatedAt, deletedAt);
+  int get hashCode => Object.hash(id, userId, category, scope, amountPaise,
+      notes, expenseDate, syncId, createdAt, updatedAt, deletedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3186,6 +3210,7 @@ class Expense extends DataClass implements Insertable<Expense> {
           other.id == this.id &&
           other.userId == this.userId &&
           other.category == this.category &&
+          other.scope == this.scope &&
           other.amountPaise == this.amountPaise &&
           other.notes == this.notes &&
           other.expenseDate == this.expenseDate &&
@@ -3199,6 +3224,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
   final Value<String> id;
   final Value<String> userId;
   final Value<String> category;
+  final Value<String> scope;
   final Value<int> amountPaise;
   final Value<String?> notes;
   final Value<DateTime> expenseDate;
@@ -3211,6 +3237,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
     this.category = const Value.absent(),
+    this.scope = const Value.absent(),
     this.amountPaise = const Value.absent(),
     this.notes = const Value.absent(),
     this.expenseDate = const Value.absent(),
@@ -3224,6 +3251,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     required String id,
     required String userId,
     required String category,
+    this.scope = const Value.absent(),
     required int amountPaise,
     this.notes = const Value.absent(),
     required DateTime expenseDate,
@@ -3244,6 +3272,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     Expression<String>? id,
     Expression<String>? userId,
     Expression<String>? category,
+    Expression<String>? scope,
     Expression<int>? amountPaise,
     Expression<String>? notes,
     Expression<DateTime>? expenseDate,
@@ -3257,6 +3286,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
       if (id != null) 'id': id,
       if (userId != null) 'user_id': userId,
       if (category != null) 'category': category,
+      if (scope != null) 'scope': scope,
       if (amountPaise != null) 'amount_paise': amountPaise,
       if (notes != null) 'notes': notes,
       if (expenseDate != null) 'expense_date': expenseDate,
@@ -3272,6 +3302,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
       {Value<String>? id,
       Value<String>? userId,
       Value<String>? category,
+      Value<String>? scope,
       Value<int>? amountPaise,
       Value<String?>? notes,
       Value<DateTime>? expenseDate,
@@ -3284,6 +3315,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       category: category ?? this.category,
+      scope: scope ?? this.scope,
       amountPaise: amountPaise ?? this.amountPaise,
       notes: notes ?? this.notes,
       expenseDate: expenseDate ?? this.expenseDate,
@@ -3306,6 +3338,9 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     }
     if (category.present) {
       map['category'] = Variable<String>(category.value);
+    }
+    if (scope.present) {
+      map['scope'] = Variable<String>(scope.value);
     }
     if (amountPaise.present) {
       map['amount_paise'] = Variable<int>(amountPaise.value);
@@ -3340,6 +3375,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('category: $category, ')
+          ..write('scope: $scope, ')
           ..write('amountPaise: $amountPaise, ')
           ..write('notes: $notes, ')
           ..write('expenseDate: $expenseDate, ')
@@ -6768,6 +6804,7 @@ typedef $$ExpensesTableCreateCompanionBuilder = ExpensesCompanion Function({
   required String id,
   required String userId,
   required String category,
+  Value<String> scope,
   required int amountPaise,
   Value<String?> notes,
   required DateTime expenseDate,
@@ -6781,6 +6818,7 @@ typedef $$ExpensesTableUpdateCompanionBuilder = ExpensesCompanion Function({
   Value<String> id,
   Value<String> userId,
   Value<String> category,
+  Value<String> scope,
   Value<int> amountPaise,
   Value<String?> notes,
   Value<DateTime> expenseDate,
@@ -6808,6 +6846,9 @@ class $$ExpensesTableFilterComposer
 
   ColumnFilters<String> get category => $composableBuilder(
       column: $table.category, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get scope => $composableBuilder(
+      column: $table.scope, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get amountPaise => $composableBuilder(
       column: $table.amountPaise, builder: (column) => ColumnFilters(column));
@@ -6849,6 +6890,9 @@ class $$ExpensesTableOrderingComposer
   ColumnOrderings<String> get category => $composableBuilder(
       column: $table.category, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get scope => $composableBuilder(
+      column: $table.scope, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get amountPaise => $composableBuilder(
       column: $table.amountPaise, builder: (column) => ColumnOrderings(column));
 
@@ -6888,6 +6932,9 @@ class $$ExpensesTableAnnotationComposer
 
   GeneratedColumn<String> get category =>
       $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get scope =>
+      $composableBuilder(column: $table.scope, builder: (column) => column);
 
   GeneratedColumn<int> get amountPaise => $composableBuilder(
       column: $table.amountPaise, builder: (column) => column);
@@ -6937,6 +6984,7 @@ class $$ExpensesTableTableManager extends RootTableManager<
             Value<String> id = const Value.absent(),
             Value<String> userId = const Value.absent(),
             Value<String> category = const Value.absent(),
+            Value<String> scope = const Value.absent(),
             Value<int> amountPaise = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<DateTime> expenseDate = const Value.absent(),
@@ -6950,6 +6998,7 @@ class $$ExpensesTableTableManager extends RootTableManager<
             id: id,
             userId: userId,
             category: category,
+            scope: scope,
             amountPaise: amountPaise,
             notes: notes,
             expenseDate: expenseDate,
@@ -6963,6 +7012,7 @@ class $$ExpensesTableTableManager extends RootTableManager<
             required String id,
             required String userId,
             required String category,
+            Value<String> scope = const Value.absent(),
             required int amountPaise,
             Value<String?> notes = const Value.absent(),
             required DateTime expenseDate,
@@ -6976,6 +7026,7 @@ class $$ExpensesTableTableManager extends RootTableManager<
             id: id,
             userId: userId,
             category: category,
+            scope: scope,
             amountPaise: amountPaise,
             notes: notes,
             expenseDate: expenseDate,
