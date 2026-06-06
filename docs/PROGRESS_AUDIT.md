@@ -1,0 +1,273 @@
+# KAJUPILOT Progress Audit
+
+Date: 2026-06-06
+Branch: `main`
+Status: Phase 0 foundation implemented and verified by automated checks; APK debug build passes; full Docker plus physical-device smoke run still pending on the user's machine
+
+## Branch And Repo
+
+| Item | State |
+|---|---|
+| Current branch | `main` |
+| Remote | `origin` -> `https://github.com/parthtiwari-dev/KajuPIlot.git` |
+| Published? | Remote is configured; current publish/commit state should be checked before pushing |
+| Roadmap preserved | Yes, `docs/kajupilot_roadmap.md` remains the source of truth |
+| Progress audit | Added as `docs/PROGRESS_AUDIT.md` by user request |
+
+## Phase -1 Checklist
+
+| Task | Result |
+|---|---|
+| Read roadmap context | Done, `docs/kajupilot_roadmap.md` was absorbed before implementation |
+| Preserve roadmap doc | Done, no roadmap edits made |
+| Create production `.gitignore` | Done, includes Flutter, Android, Node, Docker/env, generated build outputs, and keeps Gradle wrapper files trackable |
+| Add root README | Done, production-grade README added for setup, stack, verification, and rules |
+| Add environment template | Done, `.env.example` created |
+| Add Docker/Caddy baseline | Done, `docker-compose.yml` and `Caddyfile` created |
+| Scaffold Flutter app | Done in `kajupilot/` |
+| Scaffold NestJS API | Done in `kajupilot-api/` |
+| Scaffold Next admin shell | Done in `kajupilot-admin/` |
+| Install Flutter dependencies | Done |
+| Install API dependencies | Done |
+| Install admin dependencies | Done |
+| Add Prisma initial migration | Done |
+| Verify baseline builds | Done |
+
+## Phase 0 Checklist
+
+| Task | Result |
+|---|---|
+| Replace default Flutter counter app | Done |
+| Add `ProviderScope` | Done |
+| Add `AdaptiveTheme` | Done |
+| Add `GoRouter` routing | Done |
+| Add Calm Commerce theme tokens | Done |
+| Add `/setup` route | Done |
+| Add shell routes `/today`, `/money`, `/deals`, `/people`, `/more` | Done |
+| Add polished empty tab placeholders | Done |
+| Add bottom navigation shell | Done |
+| Add universal input bar | Done, UI-only Phase 0 component |
+| Add placeholder input bottom sheet | Done, no parsing logic yet |
+| Add API client | Done, supports `API_BASE_URL` Dart define |
+| Add setup-code screen | Done |
+| Store device token securely | Done with `flutter_secure_storage` |
+| Route based on stored token | Done |
+| Add lightweight auth provider/state | Done |
+| Add Drift local database foundation | Done |
+| Run Drift code generation | Done |
+| Add backend health endpoint | Done |
+| Add backend setup endpoint | Done |
+| Add JWT-shaped device token | Done |
+| Add `/auth/me` endpoint | Done |
+| Add JWT strategy skeleton | Done |
+| Add roles decorator/guard skeleton | Done |
+| Keep Phase 1 CRUD out | Done |
+| Keep AI parsing out | Done |
+
+## Phase 0 App Shell Lock
+
+| Task | Result |
+|---|---|
+| App entry | `main.dart` now boots the KajuPilot app instead of the Flutter counter |
+| Theme | Light/dark Calm Commerce palette, spacing, radius, and typography tokens added |
+| Navigation | Setup route and five post-setup tabs wired through GoRouter |
+| Today tab | Placeholder screen added |
+| Money tab | Placeholder screen added |
+| Deals tab | Placeholder screen added |
+| People tab | Placeholder screen added |
+| More tab | Placeholder screen added |
+| Universal input | Visible above bottom navigation and opens a non-parsing bottom sheet |
+| Android network access | `INTERNET` permission added |
+
+## Phase 0 Setup/Auth
+
+| Task | Result |
+|---|---|
+| API base URL | Uses `--dart-define=API_BASE_URL=...`; default is Android-emulator friendly `http://10.0.2.2:3000/api/v1` |
+| Physical phone URL policy | Use USB `adb reverse` and `http://127.0.0.1:3000/api/v1`, or use the laptop LAN IP |
+| Setup request | `POST /api/v1/auth/setup` |
+| Setup response | `{ userId, deviceToken }` |
+| Token storage | Stored in secure storage |
+| Startup behavior | No token opens setup; stored token opens shell |
+| Future auth reuse | Token provider/state ready for later API screens |
+
+## Phase 0 Local-First Database Foundation
+
+| Task | Result |
+|---|---|
+| Drift database | Added |
+| Generated database file | Added through build runner |
+| Local users | Added |
+| Parties | Added |
+| Deals | Added |
+| Payments | Added |
+| Expenses | Added |
+| Tasks | Added |
+| Call logs | Added |
+| AI parse logs | Added |
+| Pending sync queue | Added |
+| ID policy | Text IDs/UUID-style IDs |
+| Sync policy | `syncId`, timestamps, and soft-delete fields included |
+| Enum policy | Stored as text locally |
+| Money policy | Stored locally as integer paise |
+
+## Phase 0 Backend Tightening
+
+| Task | Result |
+|---|---|
+| Global API prefix | `/api/v1` |
+| Health endpoint | `GET /api/v1/health` |
+| Setup endpoint | `POST /api/v1/auth/setup` |
+| Current user endpoint | `GET /api/v1/auth/me` |
+| JWT signing | Device token signed with `JWT_SECRET` |
+| Existing owner behavior | Reuses or upgrades owner token |
+| Missing bearer token | Rejected |
+| Invalid bearer token | Rejected |
+| Prisma schema | Matches roadmap business model for Phase 0 foundation |
+| Prisma migration | Initial migration added |
+| Tests | Auth service/controller specs added |
+
+## Phase 0 Admin/Docker Foundation
+
+| Task | Result |
+|---|---|
+| Admin shell | Next admin placeholder shell added |
+| Admin production build | Passes |
+| Docker compose | PostgreSQL, Redis, API, admin, and Caddy services defined |
+| Production network policy | Postgres/Redis kept internal |
+| Caddy routing | API and admin hostnames configured through env vars |
+| Runtime Prisma CLI | `prisma` kept available so container migration deploy can run |
+| Local Docker start | Pending user local run |
+| Physical-device backend smoke | Pending user local run |
+
+## Current Stack
+
+| Package | Version |
+|---|---|
+| Flutter app Dart SDK constraint | `^3.6.1` |
+| flutter_riverpod | `^2.6.1` |
+| go_router | `^16.1.0` |
+| adaptive_theme | `^3.7.2` |
+| drift | `2.28.0` |
+| drift_flutter | `0.2.4` |
+| drift_dev | `2.28.0` |
+| dio | `^5.9.2` |
+| flutter_secure_storage | `^10.3.1` |
+| sqlite3_flutter_libs | `^0.5.42` |
+| NestJS | `^11.0.0` |
+| Prisma | `^6.0.0` |
+| PostgreSQL Docker image | `postgres:16-alpine` |
+| Redis Docker image | `redis:7-alpine` |
+| Next.js admin | `^15.5.18` |
+| React admin | `^18.3.1` |
+| Tailwind admin | `^3.4.17` |
+
+## Phase -1 Files Added
+
+| Area | Files |
+|---|---|
+| Root setup | `.gitignore`, `.env.example`, `README.md`, `docker-compose.yml`, `Caddyfile` |
+| Flutter scaffold | `kajupilot/` |
+| API scaffold | `kajupilot-api/` |
+| Admin scaffold | `kajupilot-admin/` |
+| Prisma migration | `kajupilot-api/prisma/migrations/20260604193000_init/migration.sql` |
+
+## Phase 0 Files Added
+
+| Area | Files |
+|---|---|
+| Flutter app root | `kajupilot/lib/main.dart`, `kajupilot/lib/app/kaju_app.dart` |
+| Flutter routing | `kajupilot/lib/core/router/app_router.dart` |
+| Flutter theme | `app_theme.dart`, `kaju_colors.dart`, `spacing.dart` |
+| Flutter auth | `auth_controller.dart`, `token_storage.dart` |
+| Flutter API | `api_client.dart` |
+| Flutter database | `app_database.dart`, `app_database.g.dart` |
+| Flutter setup UI | `setup_screen.dart` |
+| Flutter shell UI | `app_shell.dart`, `empty_feature_screen.dart` |
+| Flutter input UI | `universal_input_bar.dart` |
+| Flutter tests | `kajupilot/test/widget_test.dart` |
+| Backend health | `health.controller.ts`, `health.module.ts` |
+| Backend auth | `auth.controller.ts`, `auth.service.ts`, setup DTO, JWT strategy, roles decorator, roles guard, token payload type |
+| Backend Prisma | `prisma.module.ts`, `prisma.service.ts`, `prisma/schema.prisma` |
+| Backend tests | `auth.service.spec.ts`, `auth.controller.spec.ts` |
+| Admin shell | `kajupilot-admin/app/page.tsx`, `layout.tsx`, `globals.css` |
+
+## Verification
+
+| Check | Result |
+|---|---|
+| `flutter pub run build_runner build --delete-conflicting-outputs` | Pass |
+| `dart.bat format lib test` | Pass |
+| `flutter.bat analyze` | Pass |
+| `flutter.bat test` | Pass, 3 widget tests |
+| `flutter.bat build apk --debug` | Pass |
+| `npm.cmd run build` in API | Pass |
+| `npm.cmd test` in API | Pass, 2 suites / 5 tests |
+| `npm.cmd audit` in API | Pass, 0 vulnerabilities |
+| Prisma validate with `DATABASE_URL` | Pass |
+| `npm.cmd run build` in admin | Pass |
+| `npm.cmd audit` in admin | Pass, 0 vulnerabilities |
+| `docker compose --env-file .env.example config` | Pass |
+| Manual APK install/run | Pending user physical-device run |
+| Manual setup flow against live backend | Pending user physical-device run |
+
+## Issues Found And Resolved
+
+| Issue | Resolution |
+|---|---|
+| Roadmap needed lock discipline | Kept `docs/kajupilot_roadmap.md` unchanged |
+| Flutter default counter app | Replaced with real KajuPilot shell |
+| Drift latest codegen needed newer Dart than local SDK | Pinned Drift packages to versions compatible with Dart `3.6.1` |
+| Android plugins required newer Gradle/AGP/Kotlin setup | Updated Android Gradle plugin, Kotlin, Gradle wrapper, compile SDK, min SDK, NDK, and desugaring |
+| Gradle wrapper accidentally risked being ignored | `.gitignore` adjusted to keep wrapper files trackable |
+| Backend setup token needed roadmap alignment | Switched setup token to signed JWT shape |
+| `/auth/me` needed bearer validation | Added token extraction and missing-token rejection |
+| API tests needed auth coverage | Added setup success/failure and `/auth/me` rejection coverage |
+| Java was missing for APK builds | Installed real Temurin JDK 17 on Windows |
+| PyCharm JBR lacked `jlink.exe` | Switched to full JDK install |
+| Next 14 line had audit advisories | Used patched Next 15 line while keeping admin scaffold minimal |
+
+## Upgrade Notes
+
+| Area | Decision |
+|---|---|
+| Flutter app | Kept Dart SDK compatibility at local `^3.6.1` |
+| Drift | Pinned to `2.28.0` because newer generator versions require newer Dart SDK |
+| Android build | Upgraded build tooling only enough to satisfy installed plugin requirements |
+| Backend | NestJS 11 used for current supported package line |
+| Admin | Next.js 15 used instead of roadmap Next 14 because audit health is cleaner |
+| Docker | Compose file is production-oriented; a dev override may be useful later |
+| AI | Groq SDK installed for future phases but AI parsing intentionally not implemented yet |
+
+## Known Risks
+
+| Risk | Action |
+|---|---|
+| Full Docker stack not yet started by user | Run Docker setup commands and verify containers |
+| Compose API is not exposed directly on host port `3000` | For phone dev, either run API directly on Windows or add a dev compose override later |
+| Physical phone cannot use emulator address `10.0.2.2` | Use `adb reverse` plus `http://127.0.0.1:3000/api/v1`, or use LAN IP |
+| Manual setup smoke not yet completed | Start backend, run Flutter on IQOO, enter setup code, relaunch |
+| Admin dashboard is placeholder-only | Keep until backend/admin roadmap phases |
+| Phase 1 CRUD not implemented | Start only after Phase 0 local run is proven |
+| AI parsing not implemented | Start only after manual CRUD flows exist |
+| Secure production secrets are placeholders | Replace `.env` values before deployment |
+| Single-device assumption still active | Multi-device sync conflict handling can wait |
+
+## Phase 0 Data Decisions
+
+| Item | Decision |
+|---|---|
+| Product stance | Private single-trader operating system, not SaaS |
+| First app screen | Setup screen when no token exists |
+| Post-setup app shape | Five-tab shell: Today, Money, Deals, People, More |
+| Universal input | Present visually in Phase 0 but does not parse or create records yet |
+| Offline-first foundation | Drift database exists before CRUD screens |
+| Money storage | Integer paise locally; decimal/string conversion deferred to API boundary work |
+| Sync queue | `pending_sync` exists locally for future offline-first writes |
+| Manual fallback | Preserved as core rule for future AI features |
+| Backend auth | JWT-shaped device token with stored-token validation |
+| Admin | Keep as buildable placeholder until later phases |
+
+## Next Step
+
+Finish the local runtime smoke: start Docker/Postgres, run API migrations, start the API, run Flutter on the IQOO with a physical-device API URL, complete setup with `KAJU-2026`, confirm relaunch opens the five-tab shell, then commit Phase 0. After that, the next build phase should be Phase 1 manual CRUD: parties first, then deals, payments, expenses, tasks, and call logs.
