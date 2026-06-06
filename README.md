@@ -63,7 +63,9 @@ The roadmap calls out Next.js 14 for the admin. This scaffold uses the patched N
 |-- .env.example
 |-- .gitignore
 |-- Caddyfile
+|-- Makefile
 |-- docker-compose.yml
+|-- docker-compose.dev.yml
 |-- LICENSE
 `-- README.md
 ```
@@ -250,7 +252,66 @@ Invoke-RestMethod http://localhost:3000/api/v1/ai/providers
 
 ## Docker
 
-Start the full stack:
+For local development, use the Makefile command menu. It starts the API directly on `localhost:3000`, which is the cleanest path for a physical Android phone through `adb reverse`.
+
+If `make` is installed:
+
+```powershell
+make help
+```
+
+If `make` is not installed, run the same commands through PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/dev.ps1 help
+```
+
+Recommended terminal split:
+
+```powershell
+# Terminal 1: create/check env, start Docker dev stack, migrate, verify
+make env
+make env-check
+make build
+make up
+make migrate
+make health
+make ps
+```
+
+```powershell
+# Terminal 2: keep logs open
+make logs
+```
+
+```powershell
+# Terminal 3: run the Flutter app on the IQOO with hot reload
+make devices
+make run
+```
+
+The Flutter run command uses the default IQOO device id `1592533185000B8`. Override it only if `make devices` shows a different id:
+
+```powershell
+make run DEVICE_ID=your_device_id
+```
+
+The Flutter run command runs:
+
+- `adb reverse tcp:3000 tcp:3000`
+- `flutter run --dart-define=API_BASE_URL=http://127.0.0.1:3000/api/v1`
+
+Useful dev commands:
+
+```powershell
+make ps
+make restart
+make down
+make apk
+make checks
+```
+
+Start the full production-style stack with Caddy:
 
 ```powershell
 docker compose up -d --build

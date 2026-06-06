@@ -24,6 +24,8 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Add root README | Done, production-grade README added for setup, stack, verification, and rules |
 | Add environment template | Done, `.env.example` created |
 | Add Docker/Caddy baseline | Done, `docker-compose.yml` and `Caddyfile` created |
+| Add dev Docker override | Done, `docker-compose.dev.yml` exposes API/admin/Postgres/Redis for local work |
+| Add command menu | Done, `Makefile` and `scripts/dev.ps1` added |
 | Scaffold Flutter app | Done in `kajupilot/` |
 | Scaffold NestJS API | Done in `kajupilot-api/` |
 | Scaffold Next admin shell | Done in `kajupilot-admin/` |
@@ -153,6 +155,8 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Admin shell | Next admin placeholder shell added |
 | Admin production build | Passes |
 | Docker compose | PostgreSQL, Redis, API, admin, and Caddy services defined |
+| Dev compose override | Exposes API on `localhost:3000`, admin on `localhost:3001`, Postgres on `5432`, Redis on `6379` |
+| Makefile workflow | Added targets for env, up, migrate, health, logs, phone run, APK build, and checks |
 | Production network policy | Postgres/Redis kept internal |
 | Caddy routing | API and admin hostnames configured through env vars |
 | Runtime Prisma CLI | `prisma` kept available so container migration deploy can run |
@@ -188,6 +192,7 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Area | Files |
 |---|---|
 | Root setup | `.gitignore`, `.env.example`, `README.md`, `docker-compose.yml`, `Caddyfile` |
+| Dev commands | `Makefile`, `docker-compose.dev.yml`, `scripts/dev.ps1` |
 | Flutter scaffold | `kajupilot/` |
 | API scaffold | `kajupilot-api/` |
 | Admin scaffold | `kajupilot-admin/` |
@@ -251,6 +256,8 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Next 14 line had audit advisories | Used patched Next 15 line while keeping admin scaffold minimal |
 | AI provider choice could become scattered | Added one backend AI gateway and one `AI_PROVIDER` switch before parsing code exists |
 | API format script targeted a missing `test/` folder | Narrowed the format script to `src/**/*.ts` so it passes cleanly |
+| API Docker container restarted on boot | Fixed CommonJS `compression` import in `main.ts` |
+| `make migrate` depended on a running API container | Changed migration target to a one-off API container command |
 
 ## Upgrade Notes
 
@@ -269,7 +276,7 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Risk | Action |
 |---|---|
 | Full Docker stack not yet started by user | Run Docker setup commands and verify containers |
-| Compose API is not exposed directly on host port `3000` | For phone dev, either run API directly on Windows or add a dev compose override later |
+| Production Compose API is not exposed directly on host port `3000` | Use the dev compose override through `make up` for phone development |
 | Physical phone cannot use emulator address `10.0.2.2` | Use `adb reverse` plus `http://127.0.0.1:3000/api/v1`, or use LAN IP |
 | Manual setup smoke not yet completed | Start backend, run Flutter on IQOO, enter setup code, relaunch |
 | Admin dashboard is placeholder-only | Keep until backend/admin roadmap phases |

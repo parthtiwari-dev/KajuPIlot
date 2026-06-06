@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import compression from "compression";
 import helmet from "helmet";
+import compression = require("compression");
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
