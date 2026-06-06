@@ -76,85 +76,88 @@ class _PersonSheetState extends ConsumerState<PersonSheet> {
             top: KajuSpacing.md,
             bottom: MediaQuery.of(context).viewInsets.bottom + KajuSpacing.lg,
           ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: colors.borderMedium,
-                      borderRadius: BorderRadius.circular(KajuRadius.full),
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: colors.borderMedium,
+                        borderRadius: BorderRadius.circular(KajuRadius.full),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: KajuSpacing.lg),
-                Text(
-                  widget.party == null ? 'Add person' : 'Edit person',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: KajuSpacing.lg),
-                OutlinedButton.icon(
-                  key: const Key('import-phone-contact-button'),
-                  onPressed: _isImportingContact ? null : _importPhoneContact,
-                  icon: const Icon(Icons.contact_page_outlined),
-                  label: Text(
-                    _isImportingContact
-                        ? 'Opening contacts...'
-                        : 'Import from phone',
+                  const SizedBox(height: KajuSpacing.lg),
+                  Text(
+                    widget.party == null ? 'Add person' : 'Edit person',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
-                const SizedBox(height: KajuSpacing.lg),
-                TextFormField(
-                  key: const Key('person-name-field'),
-                  controller: _nameController,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(labelText: 'Name'),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Name is required';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: KajuSpacing.md),
-                TextFormField(
-                  key: const Key('person-phone-field'),
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(labelText: 'Phone'),
-                ),
-                const SizedBox(height: KajuSpacing.md),
-                SegmentedButton<PartyTypeValue>(
-                  segments: [
-                    for (final type in PartyTypeValue.values)
-                      ButtonSegment(value: type, label: Text(type.label)),
-                  ],
-                  selected: {_type},
-                  onSelectionChanged: (selection) {
-                    setState(() => _type = selection.single);
-                  },
-                ),
-                const SizedBox(height: KajuSpacing.md),
-                TextFormField(
-                  key: const Key('person-notes-field'),
-                  controller: _notesController,
-                  minLines: 2,
-                  maxLines: 4,
-                  decoration: const InputDecoration(labelText: 'Notes'),
-                ),
-                const SizedBox(height: KajuSpacing.lg),
-                FilledButton(
-                  key: const Key('person-save-button'),
-                  onPressed: _isSaving ? null : _save,
-                  child: Text(_isSaving ? 'Saving...' : 'Save'),
-                ),
-              ],
+                  const SizedBox(height: KajuSpacing.lg),
+                  OutlinedButton.icon(
+                    key: const Key('import-phone-contact-button'),
+                    onPressed: _isImportingContact ? null : _importPhoneContact,
+                    icon: const Icon(Icons.contact_page_outlined),
+                    label: Text(
+                      _isImportingContact
+                          ? 'Opening contacts...'
+                          : 'Import from phone',
+                    ),
+                  ),
+                  const SizedBox(height: KajuSpacing.lg),
+                  TextFormField(
+                    key: const Key('person-name-field'),
+                    controller: _nameController,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Name is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: KajuSpacing.md),
+                  TextFormField(
+                    key: const Key('person-phone-field'),
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(labelText: 'Phone'),
+                  ),
+                  const SizedBox(height: KajuSpacing.md),
+                  SegmentedButton<PartyTypeValue>(
+                    segments: [
+                      for (final type in PartyTypeValue.values)
+                        ButtonSegment(value: type, label: Text(type.label)),
+                    ],
+                    selected: {_type},
+                    onSelectionChanged: (selection) {
+                      setState(() => _type = selection.single);
+                    },
+                  ),
+                  const SizedBox(height: KajuSpacing.md),
+                  TextFormField(
+                    key: const Key('person-notes-field'),
+                    controller: _notesController,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: const InputDecoration(labelText: 'Notes'),
+                  ),
+                  const SizedBox(height: KajuSpacing.lg),
+                  FilledButton(
+                    key: const Key('person-save-button'),
+                    onPressed: _isSaving ? null : _save,
+                    child: Text(_isSaving ? 'Saving...' : 'Save'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

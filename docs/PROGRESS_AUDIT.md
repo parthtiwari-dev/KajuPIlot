@@ -2,7 +2,7 @@
 
 Date: 2026-06-06
 Branch: `main`
-Status: Phase 1B.1 contact import polish implemented and verified; People/Parties CRUD is live; APK debug build passes; Phase 1C Deals is next
+Status: Phase 1B.1 contact import polish implemented and verified; Person sheet overflow fixed; People/Parties CRUD is live; APK debug build passes; Phase 1C Deals is next
 
 ## Branch And Repo
 
@@ -290,7 +290,7 @@ Status: Phase 1B.1 contact import polish implemented and verified; People/Partie
 | `flutter pub run build_runner build --delete-conflicting-outputs` | Pass |
 | `dart.bat format lib test` | Pass |
 | `flutter.bat analyze` | Pass |
-| `flutter.bat test` | Pass, 18 Flutter tests |
+| `flutter.bat test` | Pass, 19 Flutter tests |
 | `flutter.bat build apk --debug` | Pass |
 | `npm.cmd run build` in API | Pass |
 | `npm.cmd run format` in API | Pass |
@@ -331,6 +331,7 @@ Status: Phase 1B.1 contact import polish implemented and verified; People/Partie
 | Future CRUD needed reusable auth access | Added `JwtAuthGuard`, `CurrentUser`, and an authenticated-user type |
 | Phase 1A risked bleeding into CRUD | Kept Parties/Deals/Payments/Expenses screens and endpoints deferred to Phase 1B+ |
 | Delete undo needed server-safe restore | Made duplicate same-user `syncId` restore soft-deleted parties |
+| Add/Edit Person sheet overflowed on phone with keyboard/contact import | Made sheet content scrollable and added compact-height regression test |
 
 ## Upgrade Notes
 

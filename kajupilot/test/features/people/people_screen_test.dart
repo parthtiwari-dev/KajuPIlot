@@ -130,6 +130,38 @@ void main() {
     expect(parties.single.name, 'Amit Verma');
     expect(parties.single.phone, '+91 98765 43210');
   });
+
+  testWidgets('Person sheet scrolls instead of overflowing on compact height', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 560));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    final repository = PartiesRepository(
+      database: database,
+      api: _OfflinePartiesApi(),
+      pendingSync: PendingSyncService(database),
+      currentUserId: 'local-owner',
+      idGenerator: _fixedIds(),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          partiesRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: MaterialApp(
+          theme: KajuTheme.dark(),
+          home: const Scaffold(body: PersonSheet()),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.byKey(const Key('person-save-button')), findsOneWidget);
+  });
 }
 
 Widget peopleWidget(
