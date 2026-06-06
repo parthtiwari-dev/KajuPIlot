@@ -77,6 +77,18 @@ class KajuApiClient {
     );
   }
 
+  Future<Response<T>> put<T>(
+    String path, {
+    Object? data,
+    Map<String, Object?>? queryParameters,
+  }) {
+    return _dio.put<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+    );
+  }
+
   Future<Response<T>> delete<T>(
     String path, {
     Object? data,

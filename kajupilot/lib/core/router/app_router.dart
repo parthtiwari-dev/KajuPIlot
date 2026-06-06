@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/people/people_screen.dart';
+import '../../features/people/person_profile_screen.dart';
 import '../../features/setup/setup_screen.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/shell/empty_feature_screen.dart';
@@ -91,13 +93,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/people',
             pageBuilder: (context, state) => _tabPage(
               state,
-              const EmptyFeatureScreen(
-                key: Key('feature-people-screen'),
-                title: 'People',
-                eyebrow: 'Customers and suppliers',
-                body: 'Contacts and trust tags will appear here.',
-                icon: Icons.groups_2_outlined,
-              ),
+              const PeopleScreen(),
             ),
           ),
           GoRoute(
@@ -114,6 +110,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/people/:partyId',
+        builder: (context, state) {
+          return PersonProfileScreen(
+            partyId: state.pathParameters['partyId']!,
+          );
+        },
       ),
     ],
   );

@@ -2,7 +2,7 @@
 
 Date: 2026-06-06
 Branch: `main`
-Status: Phase 1A shared CRUD foundation implemented and verified; APK debug build passes; API health passes; Phase 1B People/Parties CRUD is next
+Status: Phase 1B People/Parties CRUD implemented and verified; Docker API rebuilt/restarted; APK debug build passes; Phase 1C Deals is next
 
 ## Branch And Repo
 
@@ -88,6 +88,34 @@ Status: Phase 1A shared CRUD foundation implemented and verified; APK debug buil
 | Add backend JWT auth guard helper | Done |
 | Route `/auth/me` through guard/decorator pattern | Done |
 | Keep full CRUD out | Done |
+| Keep AI parsing out | Done |
+
+## Phase 1B Checklist
+
+| Task | Result |
+|---|---|
+| Add protected Parties API module | Done |
+| `GET /api/v1/parties` | Done, supports search/type/trustTag filters |
+| `POST /api/v1/parties` | Done, supports client ID and `syncId` idempotency |
+| `GET /api/v1/parties/:id` | Done |
+| `PUT /api/v1/parties/:id` | Done |
+| `DELETE /api/v1/parties/:id` | Done, soft delete only |
+| `GET /api/v1/parties/:id/ledger` | Done |
+| `GET /api/v1/parties/:id/history` | Done |
+| Add duplicate `syncId` handling | Done |
+| Add soft-delete restore path for undo | Done, re-sending same `syncId` restores same-user deleted party |
+| Scope Parties API to current user | Done |
+| Add People local-first repository | Done |
+| Add People screen | Done, replaces placeholder |
+| Add search field | Done |
+| Add filter chips | Done: All, Customers, Suppliers, Both, Overdue |
+| Add Add Person sheet | Done |
+| Add edit person flow | Done |
+| Add swipe delete with undo | Done |
+| Add pull-to-refresh | Done, flushes pending party sync then pulls server parties |
+| Add person profile route | Done, `/people/:partyId` |
+| Add profile notes editing | Done, debounced local-first update |
+| Keep Deals/Payments/Calls out | Done, profile tabs show empty states |
 | Keep AI parsing out | Done |
 
 ## Phase 0 App Shell Lock
@@ -183,8 +211,8 @@ Status: Phase 1A shared CRUD foundation implemented and verified; APK debug buil
 | Production network policy | Postgres/Redis kept internal |
 | Caddy routing | API and admin hostnames configured through env vars |
 | Runtime Prisma CLI | `prisma` kept available so container migration deploy can run |
-| Local Docker start | Pending user local run |
-| Physical-device backend smoke | Pending user local run |
+| Local Docker start | Done, dev stack rebuilt and restarted |
+| Physical-device backend smoke | Pending latest Phase 1B phone run |
 
 ## Current Stack
 
@@ -249,19 +277,22 @@ Status: Phase 1A shared CRUD foundation implemented and verified; APK debug buil
 | `flutter pub run build_runner build --delete-conflicting-outputs` | Pass |
 | `dart.bat format lib test` | Pass |
 | `flutter.bat analyze` | Pass |
-| `flutter.bat test` | Pass, 10 Flutter tests |
+| `flutter.bat test` | Pass, 17 Flutter tests |
 | `flutter.bat build apk --debug` | Pass |
 | `npm.cmd run build` in API | Pass |
 | `npm.cmd run format` in API | Pass |
-| `npm.cmd test` in API | Pass, 4 suites / 11 tests |
+| `npm.cmd test` in API | Pass, 6 suites / 23 tests |
 | `npm.cmd audit` in API | Pass, 0 vulnerabilities |
 | Prisma validate with `DATABASE_URL` | Pass |
 | `npm.cmd run build` in admin | Pass |
 | `npm.cmd audit` in admin | Pass, 0 vulnerabilities |
 | `docker compose --env-file .env.example config` | Pass |
 | `make health` | Pass, API health and AI provider config returned successfully |
+| Docker API/admin rebuild | Pass with `make build` |
+| Docker dev stack restart | Pass with `make up` |
+| Authenticated Parties route smoke | Pass, `GET /api/v1/parties` returned successfully |
 | Manual APK install/run | Pass, user confirmed IQOO opens app UI |
-| Manual setup flow against live backend | Pending user physical-device run |
+| Manual setup flow against live backend | Pending latest Phase 1B physical-device run |
 
 ## Issues Found And Resolved
 
@@ -285,6 +316,7 @@ Status: Phase 1A shared CRUD foundation implemented and verified; APK debug buil
 | Bottom-tab transition felt wrong on phone | Changed shell tab routes to `NoTransitionPage` |
 | Future CRUD needed reusable auth access | Added `JwtAuthGuard`, `CurrentUser`, and an authenticated-user type |
 | Phase 1A risked bleeding into CRUD | Kept Parties/Deals/Payments/Expenses screens and endpoints deferred to Phase 1B+ |
+| Delete undo needed server-safe restore | Made duplicate same-user `syncId` restore soft-deleted parties |
 
 ## Upgrade Notes
 
@@ -302,13 +334,13 @@ Status: Phase 1A shared CRUD foundation implemented and verified; APK debug buil
 
 | Risk | Action |
 |---|---|
-| Full Docker stack not yet started by user | Run Docker setup commands and verify containers |
+| Docker stack can drift after backend edits | Re-run `make build`, `make up`, and `make health` after API changes |
 | Production Compose API is not exposed directly on host port `3000` | Use the dev compose override through `make up` for phone development |
 | Physical phone cannot use emulator address `10.0.2.2` | Use `adb reverse` plus `http://127.0.0.1:3000/api/v1`, or use LAN IP |
 | Manual setup smoke not yet fully completed | Enter setup code on IQOO, confirm token storage, relaunch into shell |
 | Flutter debug service can disconnect on phone | App still installs/runs; rerun `make run` after reconnecting if hot reload is needed |
 | Admin dashboard is placeholder-only | Keep until backend/admin roadmap phases |
-| Phase 1 CRUD not implemented | Start only after Phase 0 local run is proven |
+| Deals CRUD not implemented | Start after People/Parties smoke is accepted |
 | AI parsing not implemented | Start only after manual CRUD flows exist |
 | AI provider prices can change | Keep env cost hints updated from OpenAI/Groq pricing pages |
 | Secure production secrets are placeholders | Replace `.env` values before deployment |
@@ -341,6 +373,18 @@ Status: Phase 1A shared CRUD foundation implemented and verified; APK debug buil
 | Backend protected routes | Future CRUD controllers should use `JwtAuthGuard` plus `CurrentUser` |
 | Phase boundary | Parties/Deals/Payments/Expenses endpoints remain Phase 1B+ work |
 
+## Phase 1B Data Decisions
+
+| Item | Decision |
+|---|---|
+| First real CRUD slice | People/Parties, because parties are required by deals, payments, tasks, and calls |
+| Party IDs | Flutter sends UUID text IDs and `syncId`; backend accepts client IDs |
+| Party sync | Local Drift write happens first, then pending sync enqueue and immediate best-effort API sync |
+| Pull-to-refresh | Flush pending party sync first, then pull server parties into Drift |
+| Delete behavior | Local soft delete, API soft delete, snackbar undo can restore locally and server-side by re-sending same `syncId` |
+| Money stats | Party pending/ledger values are computed from existing deal/payment schema and return decimal strings at API boundary |
+| Profile tabs | Deals, Payments, Calls remain empty states until their later CRUD slices |
+
 ## Next Step
 
-Start Phase 1B: implement People/Parties end-to-end first. Build protected Parties API CRUD with `syncId` dedupe and soft delete, then wire Flutter Drift-first party repository, People list, search/filter chips, Add Person sheet, and local pending-sync enqueue.
+Smoke Phase 1B on the IQOO: run `make run`, open People, add a person, relaunch, confirm the person remains, pull refresh, then test delete and undo. After that, start Phase 1C Deals CRUD end-to-end.
