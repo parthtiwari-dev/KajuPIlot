@@ -1,4 +1,4 @@
-import { UnauthorizedException } from "@nestjs/common";
+import { Role } from "@prisma/client";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 
@@ -14,16 +14,14 @@ describe("AuthController", () => {
     controller = new AuthController(authService as unknown as AuthService);
   });
 
-  it("rejects auth/me without a bearer token", async () => {
-    await expect(controller.me()).rejects.toBeInstanceOf(UnauthorizedException);
-  });
-
-  it("passes bearer token to auth service", async () => {
-    authService.getCurrentUser.mockResolvedValueOnce({ id: "user-1" });
-
-    await expect(controller.me("Bearer signed-token")).resolves.toEqual({
+  it("returns the authenticated current user", () => {
+    const user = {
       id: "user-1",
-    });
-    expect(authService.getCurrentUser).toHaveBeenCalledWith("signed-token");
+      role: Role.OWNER,
+      name: "Owner",
+      businessName: null,
+    };
+
+    expect(controller.me(user)).toEqual(user);
   });
 });

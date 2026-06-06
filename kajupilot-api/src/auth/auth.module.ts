@@ -5,6 +5,8 @@ import { PassportModule } from "@nestjs/passport";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { DeviceTokenStrategy } from "./device-token.strategy";
+import { JwtAuthGuard } from "./jwt-auth.guard";
+import { RolesGuard } from "./roles.guard";
 
 @Module({
   imports: [
@@ -18,7 +20,7 @@ import { DeviceTokenStrategy } from "./device-token.strategy";
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, DeviceTokenStrategy],
-  exports: [AuthService],
+  providers: [AuthService, DeviceTokenStrategy, JwtAuthGuard, RolesGuard],
+  exports: [AuthService, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {}

@@ -1,13 +1,9 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Headers,
-  Post,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
 import { AuthService } from "./auth.service";
+import { CurrentUser } from "./current-user.decorator";
 import { SetupAuthDto } from "./dto/setup-auth.dto";
+import { JwtAuthGuard } from "./jwt-auth.guard";
+import { AuthenticatedUser } from "./types/authenticated-user";
 
 @Controller("auth")
 export class AuthController {
@@ -19,12 +15,8 @@ export class AuthController {
   }
 
   @Get("me")
-  async me(@Headers("authorization") authorization?: string) {
-    const token = authorization?.replace(/^Bearer\s+/i, "").trim();
-    if (!token) {
-      throw new UnauthorizedException("Missing bearer token");
-    }
-
-    return this.authService.getCurrentUser(token);
+  @UseGuards(JwtAuthGuard)
+  me(@CurrentUser() user: AuthenticatedUser) {
+    return user;
   }
 }

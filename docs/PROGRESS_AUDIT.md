@@ -2,7 +2,7 @@
 
 Date: 2026-06-06
 Branch: `main`
-Status: Phase 0 foundation implemented and verified by automated checks; APK debug build passes; OpenAI/Groq AI provider switch added; full Docker plus physical-device smoke run still pending on the user's machine
+Status: Phase 1A shared CRUD foundation implemented and verified; APK debug build passes; API health passes; Phase 1B People/Parties CRUD is next
 
 ## Branch And Repo
 
@@ -65,6 +65,29 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Add roles decorator/guard skeleton | Done |
 | Add AI provider switch foundation | Done, `AI_PROVIDER=openai` or `AI_PROVIDER=groq` |
 | Keep Phase 1 CRUD out | Done |
+| Keep AI parsing out | Done |
+
+## Phase 1A Checklist
+
+| Task | Result |
+|---|---|
+| Add `KajuCard` | Done |
+| Add `AmountDisplay` | Done, uses integer paise and Indian rupee formatting |
+| Add `StatusBadge` | Done |
+| Add `PersonAvatar` | Done |
+| Add `KajuActionButton` | Done, supports phone launch path for later task cards |
+| Add lightweight empty-state helper | Done |
+| Add lightweight shimmer helper | Done |
+| Add rupee/paise utility helpers | Done |
+| Add date utility helpers | Done |
+| Attach stored token to API requests | Done, setup endpoint remains token-free |
+| Add typed API method foundation | Done |
+| Add Drift database provider | Done |
+| Add pending sync service | Done, create/update/delete queue actions only |
+| Add backend current-user decorator | Done |
+| Add backend JWT auth guard helper | Done |
+| Route `/auth/me` through guard/decorator pattern | Done |
+| Keep full CRUD out | Done |
 | Keep AI parsing out | Done |
 
 ## Phase 0 App Shell Lock
@@ -226,16 +249,17 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | `flutter pub run build_runner build --delete-conflicting-outputs` | Pass |
 | `dart.bat format lib test` | Pass |
 | `flutter.bat analyze` | Pass |
-| `flutter.bat test` | Pass, 3 widget tests |
+| `flutter.bat test` | Pass, 10 Flutter tests |
 | `flutter.bat build apk --debug` | Pass |
 | `npm.cmd run build` in API | Pass |
 | `npm.cmd run format` in API | Pass |
-| `npm.cmd test` in API | Pass, 2 suites / 5 tests |
+| `npm.cmd test` in API | Pass, 4 suites / 11 tests |
 | `npm.cmd audit` in API | Pass, 0 vulnerabilities |
 | Prisma validate with `DATABASE_URL` | Pass |
 | `npm.cmd run build` in admin | Pass |
 | `npm.cmd audit` in admin | Pass, 0 vulnerabilities |
 | `docker compose --env-file .env.example config` | Pass |
+| `make health` | Pass, API health and AI provider config returned successfully |
 | Manual APK install/run | Pass, user confirmed IQOO opens app UI |
 | Manual setup flow against live backend | Pending user physical-device run |
 
@@ -259,6 +283,8 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | API Docker container restarted on boot | Fixed CommonJS `compression` import in `main.ts` |
 | `make migrate` depended on a running API container | Changed migration target to a one-off API container command |
 | Bottom-tab transition felt wrong on phone | Changed shell tab routes to `NoTransitionPage` |
+| Future CRUD needed reusable auth access | Added `JwtAuthGuard`, `CurrentUser`, and an authenticated-user type |
+| Phase 1A risked bleeding into CRUD | Kept Parties/Deals/Payments/Expenses screens and endpoints deferred to Phase 1B+ |
 
 ## Upgrade Notes
 
@@ -304,6 +330,17 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Backend auth | JWT-shaped device token with stored-token validation |
 | Admin | Keep as buildable placeholder until later phases |
 
+## Phase 1A Data Decisions
+
+| Item | Decision |
+|---|---|
+| Shared widgets | Added as reusable app primitives without replacing current placeholder screens |
+| Amount display | Always formats from integer paise, using Indian digit grouping |
+| API auth | Reads `deviceToken` from secure storage per request and sends `Authorization: Bearer ...` |
+| Sync queue | Stores entity type, entity ID, action, JSON payload, attempt count, and timestamps |
+| Backend protected routes | Future CRUD controllers should use `JwtAuthGuard` plus `CurrentUser` |
+| Phase boundary | Parties/Deals/Payments/Expenses endpoints remain Phase 1B+ work |
+
 ## Next Step
 
-Finish the local runtime smoke: start Docker/Postgres, run API migrations, start the API, run Flutter on the IQOO with a physical-device API URL, complete setup with `KAJU-2026`, confirm relaunch opens the five-tab shell, then commit Phase 0. After that, the next build phase should be Phase 1 manual CRUD: parties first, then deals, payments, expenses, tasks, and call logs.
+Start Phase 1B: implement People/Parties end-to-end first. Build protected Parties API CRUD with `syncId` dedupe and soft delete, then wire Flutter Drift-first party repository, People list, search/filter chips, Add Person sheet, and local pending-sync enqueue.
