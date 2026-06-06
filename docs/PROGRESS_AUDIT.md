@@ -236,7 +236,7 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | `npm.cmd run build` in admin | Pass |
 | `npm.cmd audit` in admin | Pass, 0 vulnerabilities |
 | `docker compose --env-file .env.example config` | Pass |
-| Manual APK install/run | Pending user physical-device run |
+| Manual APK install/run | Pass, user confirmed IQOO opens app UI |
 | Manual setup flow against live backend | Pending user physical-device run |
 
 ## Issues Found And Resolved
@@ -258,6 +258,7 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | API format script targeted a missing `test/` folder | Narrowed the format script to `src/**/*.ts` so it passes cleanly |
 | API Docker container restarted on boot | Fixed CommonJS `compression` import in `main.ts` |
 | `make migrate` depended on a running API container | Changed migration target to a one-off API container command |
+| Bottom-tab transition felt wrong on phone | Changed shell tab routes to `NoTransitionPage` |
 
 ## Upgrade Notes
 
@@ -278,7 +279,8 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Full Docker stack not yet started by user | Run Docker setup commands and verify containers |
 | Production Compose API is not exposed directly on host port `3000` | Use the dev compose override through `make up` for phone development |
 | Physical phone cannot use emulator address `10.0.2.2` | Use `adb reverse` plus `http://127.0.0.1:3000/api/v1`, or use LAN IP |
-| Manual setup smoke not yet completed | Start backend, run Flutter on IQOO, enter setup code, relaunch |
+| Manual setup smoke not yet fully completed | Enter setup code on IQOO, confirm token storage, relaunch into shell |
+| Flutter debug service can disconnect on phone | App still installs/runs; rerun `make run` after reconnecting if hot reload is needed |
 | Admin dashboard is placeholder-only | Keep until backend/admin roadmap phases |
 | Phase 1 CRUD not implemented | Start only after Phase 0 local run is proven |
 | AI parsing not implemented | Start only after manual CRUD flows exist |

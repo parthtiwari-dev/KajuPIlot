@@ -50,52 +50,67 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/today',
-            builder: (context, state) => const EmptyFeatureScreen(
-              key: Key('feature-today-screen'),
-              title: 'Today',
-              eyebrow: 'Your daily command center',
-              body: 'Nothing on the agenda yet.',
-              icon: Icons.today_outlined,
+            pageBuilder: (context, state) => _tabPage(
+              state,
+              const EmptyFeatureScreen(
+                key: Key('feature-today-screen'),
+                title: 'Today',
+                eyebrow: 'Your daily command center',
+                body: 'Nothing on the agenda yet.',
+                icon: Icons.today_outlined,
+              ),
             ),
           ),
           GoRoute(
             path: '/money',
-            builder: (context, state) => const EmptyFeatureScreen(
-              key: Key('feature-money-screen'),
-              title: 'Money',
-              eyebrow: 'Receivable, payable, expenses',
-              body: 'Ledgers will appear here once entries begin.',
-              icon: Icons.currency_rupee,
+            pageBuilder: (context, state) => _tabPage(
+              state,
+              const EmptyFeatureScreen(
+                key: Key('feature-money-screen'),
+                title: 'Money',
+                eyebrow: 'Receivable, payable, expenses',
+                body: 'Ledgers will appear here once entries begin.',
+                icon: Icons.currency_rupee,
+              ),
             ),
           ),
           GoRoute(
             path: '/deals',
-            builder: (context, state) => const EmptyFeatureScreen(
-              key: Key('feature-deals-screen'),
-              title: 'Deals',
-              eyebrow: 'Sales and purchases',
-              body: 'Deal cards will live here after manual entry starts.',
-              icon: Icons.inventory_2_outlined,
+            pageBuilder: (context, state) => _tabPage(
+              state,
+              const EmptyFeatureScreen(
+                key: Key('feature-deals-screen'),
+                title: 'Deals',
+                eyebrow: 'Sales and purchases',
+                body: 'Deal cards will live here after manual entry starts.',
+                icon: Icons.inventory_2_outlined,
+              ),
             ),
           ),
           GoRoute(
             path: '/people',
-            builder: (context, state) => const EmptyFeatureScreen(
-              key: Key('feature-people-screen'),
-              title: 'People',
-              eyebrow: 'Customers and suppliers',
-              body: 'Contacts and trust tags will appear here.',
-              icon: Icons.groups_2_outlined,
+            pageBuilder: (context, state) => _tabPage(
+              state,
+              const EmptyFeatureScreen(
+                key: Key('feature-people-screen'),
+                title: 'People',
+                eyebrow: 'Customers and suppliers',
+                body: 'Contacts and trust tags will appear here.',
+                icon: Icons.groups_2_outlined,
+              ),
             ),
           ),
           GoRoute(
             path: '/more',
-            builder: (context, state) => const EmptyFeatureScreen(
-              key: Key('feature-more-screen'),
-              title: 'More',
-              eyebrow: 'Insights and settings',
-              body: 'Reports, theme controls, and admin links come later.',
-              icon: Icons.more_horiz,
+            pageBuilder: (context, state) => _tabPage(
+              state,
+              const EmptyFeatureScreen(
+                key: Key('feature-more-screen'),
+                title: 'More',
+                eyebrow: 'Insights and settings',
+                body: 'Reports, theme controls, and admin links come later.',
+                icon: Icons.more_horiz,
+              ),
             ),
           ),
         ],
@@ -103,6 +118,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+Page<void> _tabPage(GoRouterState state, Widget child) {
+  return NoTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+  );
+}
 
 class KajuSplashScreen extends StatelessWidget {
   const KajuSplashScreen({super.key});
