@@ -3,7 +3,14 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { DealType, Party, PartyType, Prisma, TrustTag } from "@prisma/client";
+import {
+  DealType,
+  Party,
+  PartyType,
+  PaymentType,
+  Prisma,
+  TrustTag,
+} from "@prisma/client";
 import { randomUUID } from "crypto";
 import { AuthenticatedUser } from "../auth/types/authenticated-user";
 import { PrismaService } from "../prisma/prisma.service";
@@ -16,6 +23,11 @@ type DealForLedger = {
   totalAmount: Prisma.Decimal | number | string;
   paidAmount: Prisma.Decimal | number | string;
   paymentDue: Date | null;
+};
+
+type PaymentForLedger = {
+  type: PaymentType;
+  amount: Prisma.Decimal | number | string;
 };
 
 @Injectable()
@@ -130,8 +142,11 @@ export class PartiesService {
 
   async ledger(user: AuthenticatedUser, id: string) {
     await this.findActiveParty(user.id, id);
-    const deals = await this.dealsForParty(user.id, id);
-    const totals = this.computeLedger(deals);
+    const [deals, payments] = await Promise.all([
+      this.dealsForParty(user.id, id),
+      this.unlinkedPaymentsForParty(user.id, id),
+    ]);
+    const totals = this.computeLedger(deals, payments);
 
     return {
       receivable: totals.receivable.toFixed(2),
@@ -169,8 +184,19 @@ export class PartiesService {
         paidAmount: this.decimalString(deal.paidAmount),
       })),
       payments: payments.map((payment) => ({
-        ...payment,
+        id: payment.id,
+        userId: payment.userId,
+        partyId: payment.partyId,
+        dealId: payment.dealId,
+        type: payment.type,
         amount: this.decimalString(payment.amount),
+        method: payment.method,
+        notes: payment.notes,
+        paymentDate: payment.paymentDate.toISOString(),
+        syncId: payment.syncId,
+        createdAt: payment.createdAt.toISOString(),
+        updatedAt: payment.updatedAt.toISOString(),
+        deletedAt: payment.deletedAt?.toISOString() ?? null,
       })),
       callLogs: callLogs.map((callLog) => ({
         ...callLog,
@@ -194,8 +220,11 @@ export class PartiesService {
   }
 
   private async withStats(userId: string, party: Party) {
-    const deals = await this.dealsForParty(userId, party.id);
-    const totals = this.computeLedger(deals);
+    const [deals, payments] = await Promise.all([
+      this.dealsForParty(userId, party.id),
+      this.unlinkedPaymentsForParty(userId, party.id),
+    ]);
+    const totals = this.computeLedger(deals, payments);
 
     return {
       ...this.toJson(party),
@@ -236,13 +265,27 @@ export class PartiesService {
     });
   }
 
-  private computeLedger(deals: DealForLedger[]) {
+  private unlinkedPaymentsForParty(userId: string, partyId: string) {
+    return this.prisma.payment.findMany({
+      where: { userId, partyId, dealId: null, deletedAt: null },
+      select: {
+        type: true,
+        amount: true,
+      },
+    });
+  }
+
+  private computeLedger(
+    deals: DealForLedger[],
+    unlinkedPayments: PaymentForLedger[] = [],
+  ) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     let receivable = new Prisma.Decimal(0);
     let payable = new Prisma.Decimal(0);
-    let overdueAmount = new Prisma.Decimal(0);
+    let overdueReceivable = new Prisma.Decimal(0);
+    let overduePayable = new Prisma.Decimal(0);
     let oldestOverdueDate: Date | null = null;
 
     for (const deal of deals) {
@@ -261,19 +304,50 @@ export class PartiesService {
       }
 
       if (deal.paymentDue && deal.paymentDue < today) {
-        overdueAmount = overdueAmount.plus(remaining);
+        if (deal.type === DealType.SALE) {
+          overdueReceivable = overdueReceivable.plus(remaining);
+        } else {
+          overduePayable = overduePayable.plus(remaining);
+        }
         if (!oldestOverdueDate || deal.paymentDue < oldestOverdueDate) {
           oldestOverdueDate = deal.paymentDue;
         }
       }
     }
 
+    for (const payment of unlinkedPayments) {
+      const amount = new Prisma.Decimal(payment.amount);
+      if (payment.type === PaymentType.RECEIVED) {
+        receivable = Prisma.Decimal.max(
+          new Prisma.Decimal(0),
+          receivable.minus(amount),
+        );
+        overdueReceivable = Prisma.Decimal.max(
+          new Prisma.Decimal(0),
+          overdueReceivable.minus(amount),
+        );
+      } else {
+        payable = Prisma.Decimal.max(
+          new Prisma.Decimal(0),
+          payable.minus(amount),
+        );
+        overduePayable = Prisma.Decimal.max(
+          new Prisma.Decimal(0),
+          overduePayable.minus(amount),
+        );
+      }
+    }
+
+    const overdueAmount = overdueReceivable.plus(overduePayable);
+
     return {
       receivable,
       payable,
       net: receivable.minus(payable),
       overdueAmount,
-      oldestOverdueDate,
+      oldestOverdueDate: overdueAmount.greaterThan(0)
+        ? oldestOverdueDate
+        : null,
     };
   }
 

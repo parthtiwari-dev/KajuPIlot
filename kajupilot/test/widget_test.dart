@@ -55,7 +55,8 @@ void main() {
     expect(find.byKey(const Key('feature-today-screen')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav-money')));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.byKey(const Key('feature-money-screen')), findsOneWidget);
   });

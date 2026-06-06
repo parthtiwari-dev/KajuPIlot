@@ -295,10 +295,18 @@ class PartiesRepository {
           ..where(
               (row) => row.partyId.equals(partyId) & row.deletedAt.isNull()))
         .get();
+    final payments = await (_database.select(_database.payments)
+          ..where((row) {
+            return row.partyId.equals(partyId) &
+                row.dealId.isNull() &
+                row.deletedAt.isNull();
+          }))
+        .get();
 
     var receivable = 0;
     var payable = 0;
-    var overdue = 0;
+    var overdueReceivable = 0;
+    var overduePayable = 0;
     final today = DateTime.now();
     final todayOnly = DateTime(today.year, today.month, today.day);
 
@@ -316,14 +324,29 @@ class PartiesRepository {
 
       final due = deal.paymentDue;
       if (due != null && due.isBefore(todayOnly)) {
-        overdue += remaining;
+        if (deal.type == PartyDealType.sale.apiValue) {
+          overdueReceivable += remaining;
+        } else {
+          overduePayable += remaining;
+        }
+      }
+    }
+
+    for (final payment in payments) {
+      if (payment.type == 'RECEIVED') {
+        receivable = _clampPositive(receivable - payment.amountPaise);
+        overdueReceivable =
+            _clampPositive(overdueReceivable - payment.amountPaise);
+      } else {
+        payable = _clampPositive(payable - payment.amountPaise);
+        overduePayable = _clampPositive(overduePayable - payment.amountPaise);
       }
     }
 
     return PartyStats(
       dealCount: deals.length,
       pendingAmountPaise: receivable - payable,
-      overdueAmountPaise: overdue,
+      overdueAmountPaise: overdueReceivable + overduePayable,
       avgDelayDays: 0,
     );
   }
@@ -448,6 +471,10 @@ class PartiesRepository {
   String? _clean(String? value) {
     final trimmed = value?.trim();
     return trimmed == null || trimmed.isEmpty ? null : trimmed;
+  }
+
+  int _clampPositive(int value) {
+    return value < 0 ? 0 : value;
   }
 }
 

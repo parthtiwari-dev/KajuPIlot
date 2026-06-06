@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/deals/deals_screen.dart';
+import '../../features/money/money_screen.dart';
 import '../../features/people/people_screen.dart';
 import '../../features/people/person_profile_screen.dart';
 import '../../features/setup/setup_screen.dart';
@@ -68,13 +69,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/money',
             pageBuilder: (context, state) => _tabPage(
               state,
-              const EmptyFeatureScreen(
-                key: Key('feature-money-screen'),
-                title: 'Money',
-                eyebrow: 'Receivable, payable, expenses',
-                body: 'Ledgers will appear here once entries begin.',
-                icon: Icons.currency_rupee,
-              ),
+              const MoneyScreen(),
             ),
           ),
           GoRoute(

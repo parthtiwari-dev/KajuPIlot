@@ -16,6 +16,10 @@ import '../deals/data/deal_models.dart';
 import '../deals/data/deals_repository.dart';
 import '../deals/widgets/deal_card.dart';
 import '../deals/widgets/deal_sheet.dart';
+import '../money/data/money_models.dart';
+import '../money/data/payments_repository.dart';
+import '../money/widgets/payment_card.dart';
+import '../money/widgets/payment_sheet.dart';
 import 'data/parties_repository.dart';
 import 'data/party_models.dart';
 import 'widgets/person_sheet.dart';
@@ -114,10 +118,7 @@ class _PersonProfileScreenState extends ConsumerState<PersonProfileScreen>
                   controller: _tabController,
                   children: [
                     _ProfileDealsTab(partyId: party.id),
-                    const _ProfileEmptyTab(
-                      icon: Icons.currency_rupee,
-                      title: 'No payments yet',
-                    ),
+                    _ProfilePaymentsTab(partyId: party.id),
                     const _ProfileEmptyTab(
                       icon: Icons.call_outlined,
                       title: 'No calls yet',
@@ -340,6 +341,48 @@ class _ProfileDealsTab extends ConsumerWidget {
             return DealCard(
               item: item,
               onTap: () => showDealSheet(context, item: item),
+            );
+          },
+          separatorBuilder: (_, __) => const SizedBox(height: KajuSpacing.md),
+          itemCount: items.length,
+        );
+      },
+    );
+  }
+}
+
+class _ProfilePaymentsTab extends ConsumerWidget {
+  const _ProfilePaymentsTab({required this.partyId});
+
+  final String partyId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final payments = ref.watch(
+      paymentListProvider(PaymentListQuery(partyId: partyId)),
+    );
+
+    return payments.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const _ProfileEmptyTab(
+        icon: Icons.cloud_off_outlined,
+        title: 'Payments are saved locally',
+      ),
+      data: (items) {
+        if (items.isEmpty) {
+          return const _ProfileEmptyTab(
+            icon: Icons.currency_rupee,
+            title: 'No payments yet',
+          );
+        }
+
+        return ListView.separated(
+          padding: const EdgeInsets.only(top: KajuSpacing.md),
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return PaymentCard(
+              item: item,
+              onTap: () => showPaymentSheet(context, item: item),
             );
           },
           separatorBuilder: (_, __) => const SizedBox(height: KajuSpacing.md),

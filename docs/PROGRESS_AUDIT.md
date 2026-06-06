@@ -1,8 +1,8 @@
 # KAJUPILOT Progress Audit
 
-Date: 2026-06-06
+Date: 2026-06-07
 Branch: `main`
-Status: Phase 1C.1 bucket-wise Deals correction implemented and verified; People/Parties CRUD remains live; APK debug build passes; Phase 1D Money/Payments is next
+Status: Phase 1D Money, Payments, and Expenses implemented and verified; People/Deals remain live; APK debug build passes; phone smoke is next
 
 ## Branch And Repo
 
@@ -184,6 +184,46 @@ Status: Phase 1C.1 bucket-wise Deals correction implemented and verified; People
 | Default new deals to Confirmed | Done, no quoted/confirmed choice shown on create |
 | Preserve status workflow for later detail actions | Done |
 
+## Phase 1D Checklist
+
+| Task | Result |
+|---|---|
+| Add protected Payments API module | Done |
+| `GET /api/v1/payments` | Done, supports party/deal/type/date filters |
+| `POST /api/v1/payments` | Done, supports client ID and `syncId` idempotency |
+| `PUT /api/v1/payments/:id` | Done |
+| `DELETE /api/v1/payments/:id` | Done, soft delete only |
+| `GET /api/v1/payments/ledger` | Done |
+| Scope Payments API to current user | Done |
+| Validate payment party ownership | Done |
+| Validate linked deal ownership and party match | Done |
+| Linked payment updates deal `paidAmount` | Done |
+| Linked payment overpay rejection | Done |
+| Soft delete reverses linked deal paid amount | Done |
+| Party-level payment support | Done, reduces party-level receivable/payable without mutating deals |
+| Add protected Expenses API module | Done |
+| `GET /api/v1/expenses` | Done, supports category/date filters |
+| `POST /api/v1/expenses` | Done, supports client ID and `syncId` idempotency |
+| `PUT /api/v1/expenses/:id` | Done |
+| `DELETE /api/v1/expenses/:id` | Done, soft delete only |
+| `GET /api/v1/expenses/summary` | Done, returns category totals and period comparison |
+| Scope Expenses API to current user | Done |
+| Update party ledger/history for payments | Done, unlinked payments affect balances and payments appear in history |
+| Add Payments local-first repository | Done |
+| Add Expenses local-first repository | Done |
+| Add Money tab | Done, replaces placeholder |
+| Add Money summary card | Done: To Receive, To Pay, Net |
+| Add Receivable tab | Done |
+| Add Payable tab | Done |
+| Add Expenses tab | Done with category filter, summary, list, delete undo |
+| Add Payment sheet | Done, supports new/existing party, linked deal, or party credit |
+| Add Expense sheet | Done |
+| Update local linked deal paid amount on payment write | Done |
+| Queue payment/expense pending sync on API failure | Done |
+| Add People profile Payments tab | Done |
+| Update local People stats for party-level payments | Done |
+| Keep AI parsing, Tasks, Calls, Reports, Admin out | Done |
+
 ## Phase 0 App Shell Lock
 
 | Task | Result |
@@ -192,7 +232,7 @@ Status: Phase 1C.1 bucket-wise Deals correction implemented and verified; People
 | Theme | Light/dark Calm Commerce palette, spacing, radius, and typography tokens added |
 | Navigation | Setup route and five post-setup tabs wired through GoRouter |
 | Today tab | Placeholder screen added |
-| Money tab | Placeholder screen added |
+| Money tab | Real local-first Money screen added in Phase 1D |
 | Deals tab | Real local-first deals list added |
 | People tab | Placeholder screen added |
 | More tab | Placeholder screen added |
@@ -221,8 +261,8 @@ Status: Phase 1C.1 bucket-wise Deals correction implemented and verified; People
 | Parties | Added |
 | Deals | Added |
 | Deal items | Added |
-| Payments | Added |
-| Expenses | Added |
+| Payments | Added and now used by Phase 1D |
+| Expenses | Added and now used by Phase 1D |
 | Tasks | Added |
 | Call logs | Added |
 | AI parse logs | Added |
@@ -344,11 +384,12 @@ Status: Phase 1C.1 bucket-wise Deals correction implemented and verified; People
 | `flutter pub run build_runner build --delete-conflicting-outputs` | Pass |
 | `dart.bat format lib test` | Pass |
 | `flutter.bat analyze` | Pass |
-| `flutter.bat test` | Pass, 31 Flutter tests |
+| `flutter.bat test` | Pass, 36 Flutter tests |
+| `flutter.bat test test/features/money` | Pass, 5 Money repository tests |
 | `flutter.bat build apk --debug` | Pass |
 | `npm.cmd run build` in API | Pass |
 | `npm.cmd run format` in API | Pass |
-| `npm.cmd test` in API | Pass, 8 suites / 36 tests |
+| `npm.cmd test` in API | Pass, 10 suites / 49 tests |
 | `npm.cmd audit` in API | Pass, 0 vulnerabilities |
 | Prisma validate with `DATABASE_URL` | Pass |
 | `npm.cmd run build` in admin | Pass |
@@ -360,6 +401,8 @@ Status: Phase 1C.1 bucket-wise Deals correction implemented and verified; People
 | Authenticated Parties route smoke | Pass, `GET /api/v1/parties` returned successfully |
 | Authenticated Deals route smoke | Pass, `GET /api/v1/deals` returned successfully |
 | Authenticated bucket-wise Deal create smoke | Pass, created deal with item `10 balti` and pending total |
+| Authenticated Payments route smoke | Pass, linked payment updated deal paid amount |
+| Authenticated Expenses route smoke | Pass, expense create and summary returned successfully |
 | Android contact picker bridge compile | Pass through debug APK build |
 | Manual APK install/run | Pass, user confirmed IQOO opens app UI |
 | Manual setup flow against live backend | Pending latest Phase 1C physical-device deals smoke |
@@ -392,6 +435,9 @@ Status: Phase 1C.1 bucket-wise Deals correction implemented and verified; People
 | Deal status could corrupt ledger state | Added forward-only status transitions and full-payment requirement for `PAID` |
 | Deals were too kg-specific for real cashew trading | Reworked deals to bucket-wise free-text quantities with manual totals |
 | Add Deal forced existing parties only | Add Deal can now create a new person and auto-classify Customer/Supplier from Sale/Purchase |
+| Money tab was still a placeholder | Replaced it with receivable, payable, and expense workflows |
+| Payment records could double-count deal balances | Linked payments now mutate deal paid amount; party-level credits reduce party balances only |
+| Party ledger ignored unlinked payments | Party ledger and local stats now include party-level payment credits |
 
 ## Upgrade Notes
 
@@ -415,7 +461,7 @@ Status: Phase 1C.1 bucket-wise Deals correction implemented and verified; People
 | Manual setup smoke not yet fully completed | Enter setup code on IQOO, confirm token storage, relaunch into shell |
 | Flutter debug service can disconnect on phone | App still installs/runs; rerun `make run` after reconnecting if hot reload is needed |
 | Admin dashboard is placeholder-only | Keep until backend/admin roadmap phases |
-| Payments CRUD not implemented | Start Phase 1D after Deals phone smoke is accepted |
+| Physical phone smoke for Money is pending | Rebuild/restart Docker, run the app, and test linked payment plus expense flows on IQOO |
 | AI parsing not implemented | Start only after manual CRUD flows exist |
 | AI provider prices can change | Keep env cost hints updated from OpenAI/Groq pricing pages |
 | Secure production secrets are placeholders | Replace `.env` values before deployment |
@@ -499,6 +545,23 @@ Status: Phase 1C.1 bucket-wise Deals correction implemented and verified; People
 | Auto party type | Sale creates Customer; Purchase creates Supplier |
 | Quoted/Confirmed UX | New deals default to Confirmed; quoted status remains backend-supported but not shown during creation |
 
+## Phase 1D Data Decisions
+
+| Item | Decision |
+|---|---|
+| Third real CRUD slice | Money, because Deals now have totals and pending balances |
+| Payment IDs | Flutter sends UUID text IDs and `syncId`; backend accepts client IDs |
+| Payment sync | Local Drift write happens first, then pending sync enqueue and immediate best-effort API sync |
+| Expense sync | Local Drift write happens first, then pending sync enqueue and immediate best-effort API sync |
+| Linked payment model | Linked payment updates the matching deal `paidAmount` locally and on the backend |
+| Linked overpayment | Rejected locally and by the API |
+| Party-level payment model | Allowed as unlinked payment; reduces receivable/payable ledger without changing any deal |
+| Delete behavior | Soft delete only; linked payment delete reverses deal paid amount |
+| Money screen shape | Summary card plus Receivable, Payable, and Expenses tabs |
+| Expense summary | Lightweight category totals; advanced reports/charts remain later |
+| People integration | Person profile Payments tab shows local payments filtered by `partyId` |
+| Phase boundary | Tasks, Calls, AI parsing, Reports, and Admin remain out of Phase 1D |
+
 ## Next Step
 
-Smoke Phase 1C.1 on the IQOO: run `make run`, open Deals, type a new buyer name, add one or two grade rows with quantities like `10 balti`, enter line totals and paid amount, save, confirm the new person appears in People, reopen the deal, and test delete plus undo. After that, start Phase 1D Money/Payments end-to-end.
+Smoke Phase 1D on the IQOO: rebuild/restart Docker, run `make run`, create or reuse a person and deal, add a linked received payment, confirm pending decreases, add a party-level payment, add an expense, relaunch, pull refresh, and test delete plus undo.
