@@ -2,7 +2,7 @@
 
 Date: 2026-06-07
 Branch: `main`
-Status: Phase 1E polish and silent sync reliability implemented and verified; ready for IQOO smoke before Phase 2
+Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications implemented and verified; ready for IQOO smoke
 
 ## Branch And Repo
 
@@ -259,6 +259,41 @@ Status: Phase 1E polish and silent sync reliability implemented and verified; re
 | Keep Money ledger rows non-deletable | Done, ledger rows remain computed balances |
 | Keep Today/More placeholders unchanged | Done |
 
+## Phase 2 Checklist
+
+| Task | Result |
+|---|---|
+| Add protected Tasks API module | Done |
+| `GET /api/v1/tasks` | Done, supports status/type/party/date filters |
+| `GET /api/v1/tasks/today` | Done, date-aware and sorted overdue first, priority, then time |
+| `POST /api/v1/tasks` | Done, supports client ID and `syncId` idempotency |
+| `PUT /api/v1/tasks/:id` | Done |
+| `PUT /api/v1/tasks/:id/complete` | Done |
+| `PUT /api/v1/tasks/:id/postpone` | Done |
+| `DELETE /api/v1/tasks/:id` | Done, soft delete only |
+| Add protected Call Logs API module | Done |
+| `POST /api/v1/call-logs` | Done, logs call outcomes and side effects |
+| `GET /api/v1/call-logs` | Done, supports party/date filters |
+| Prevent duplicate call-log side effects | Done, duplicate `syncId` returns existing call log only |
+| Payment promised follow-up task | Done |
+| No-answer follow-up task | Done |
+| New-order follow-up task | Done |
+| Complete source task after saved outcome | Done locally and on backend |
+| Add Today insights API | Done, `GET /api/v1/insights/today` |
+| Add Flutter Tasks API/repository | Done |
+| Add Flutter Call Logs API/repository | Done |
+| Add Tasks and Call Logs to silent sync retry | Done |
+| Add local notification service | Done, task reminders, 8 AM summary, quiet hourly nudges |
+| Add Android notification permission | Done |
+| Replace Today placeholder | Done |
+| Add Today stats, sections, skeletons, empty state, and pull-to-refresh | Done |
+| Add manual Add/Edit Task sheet | Done |
+| Add done/postpone/delete task actions | Done |
+| Add call button and OutcomeSheet | Done |
+| Add real People profile Calls tab | Done |
+| Keep AI parsing out | Done |
+| Keep Reports/Admin out | Done |
+
 ## Phase 0 App Shell Lock
 
 | Task | Result |
@@ -266,13 +301,14 @@ Status: Phase 1E polish and silent sync reliability implemented and verified; re
 | App entry | `main.dart` now boots the KajuPilot app instead of the Flutter counter |
 | Theme | Light/dark Calm Commerce palette, spacing, radius, and typography tokens added |
 | Navigation | Setup route and five post-setup tabs wired through GoRouter |
-| Today tab | Placeholder screen added |
+| Today tab | Real local-first command center added in Phase 2 |
 | Money tab | Real local-first Money screen added in Phase 1D |
 | Deals tab | Real local-first deals list added |
-| People tab | Placeholder screen added |
+| People tab | Real local-first People screen added in Phase 1B |
 | More tab | Placeholder screen added |
 | Universal input | Visible above bottom navigation and opens a non-parsing bottom sheet |
 | Android network access | `INTERNET` permission added |
+| Android notifications | `POST_NOTIFICATIONS` permission added |
 
 ## Phase 0 Setup/Auth
 
@@ -298,8 +334,8 @@ Status: Phase 1E polish and silent sync reliability implemented and verified; re
 | Deal items | Added |
 | Payments | Added and now used by Phase 1D |
 | Expenses | Added and now used by Phase 1D |
-| Tasks | Added |
-| Call logs | Added |
+| Tasks | Added and now used by Phase 2 |
+| Call logs | Added and now used by Phase 2 |
 | AI parse logs | Added |
 | Pending sync queue | Added |
 | ID policy | Text IDs/UUID-style IDs |
@@ -354,7 +390,7 @@ Status: Phase 1E polish and silent sync reliability implemented and verified; re
 | Caddy routing | API and admin hostnames configured through env vars |
 | Runtime Prisma CLI | `prisma` kept available so container migration deploy can run |
 | Local Docker start | Done, dev stack rebuilt and restarted |
-| Physical-device backend smoke | Pending latest Phase 1C phone run |
+| Physical-device backend smoke | Pending Phase 2 IQOO smoke |
 
 ## Current Stack
 
@@ -368,7 +404,11 @@ Status: Phase 1E polish and silent sync reliability implemented and verified; re
 | drift_flutter | `0.2.4` |
 | drift_dev | `2.28.0` |
 | dio | `^5.9.2` |
+| flutter_local_notifications | `^19.5.0` |
 | flutter_secure_storage | `^10.3.1` |
+| intl | `^0.20.2` |
+| url_launcher | `^6.3.2` |
+| timezone | `^0.10.1` |
 | sqlite3_flutter_libs | `^0.5.42` |
 | NestJS | `^11.0.0` |
 | Prisma | `^6.0.0` |
@@ -419,12 +459,14 @@ Status: Phase 1E polish and silent sync reliability implemented and verified; re
 | `flutter pub run build_runner build --delete-conflicting-outputs` | Pass |
 | `dart.bat format lib test` | Pass |
 | `flutter.bat analyze` | Pass |
-| `flutter.bat test` | Pass, 39 Flutter tests |
+| `flutter.bat test` | Pass, 45 Flutter tests |
 | `flutter.bat test test/features/money` | Pass, 5 Money repository tests |
+| `flutter.bat test test\features\today` | Pass, 3 Today repository tests |
 | `flutter.bat build apk --debug` | Pass |
 | `npm.cmd run build` in API | Pass |
 | `npm.cmd run format` in API | Pass |
-| `npm.cmd test` in API | Pass, 10 suites / 49 tests |
+| `npm.cmd test` in API | Pass, 13 suites / 58 tests |
+| Phase 2 targeted backend specs | Pass, 9 Tasks/Call Logs/Insights tests |
 | `npm.cmd audit` in API | Pass, 0 vulnerabilities |
 | Prisma validate with `DATABASE_URL` | Pass |
 | `npm.cmd run build` in admin | Pass |
@@ -442,7 +484,7 @@ Status: Phase 1E polish and silent sync reliability implemented and verified; re
 | Authenticated personal expense smoke | Pass, `scope=PERSONAL` create and scoped summary returned successfully |
 | Android contact picker bridge compile | Pass through debug APK build |
 | Manual APK install/run | Pass, user confirmed IQOO opens app UI |
-| Manual setup flow against live backend | Pending latest Phase 1C physical-device deals smoke |
+| Manual setup flow against live backend | Pending Phase 2 IQOO smoke |
 
 ## Issues Found And Resolved
 
@@ -478,6 +520,10 @@ Status: Phase 1E polish and silent sync reliability implemented and verified; re
 | Personal expenses could pollute business expense totals | Added Business/Personal expense scope and split summaries |
 | Profile tab swipe delete fought horizontal tab paging | Disabled horizontal swiping on profile `TabBarView` so row swipe-delete is reliable |
 | Sync retry needed to be reliable but invisible | Added `SyncCoordinator` and lifecycle retry without popups or manual sync UI |
+| Today tab was still a placeholder | Replaced it with a real local-first command center |
+| Tasks and call logs existed only as schema | Added protected APIs, Flutter repositories, sync retry, and UI |
+| Call outcome retries could duplicate follow-up tasks | Made call-log `syncId` idempotent and accepted client-generated follow-up task IDs |
+| Notification summaries used `Rs` text | Switched user-facing notification money text to `₹` |
 
 ## Upgrade Notes
 
@@ -501,7 +547,9 @@ Status: Phase 1E polish and silent sync reliability implemented and verified; re
 | Manual setup smoke not yet fully completed | Enter setup code on IQOO, confirm token storage, relaunch into shell |
 | Flutter debug service can disconnect on phone | App still installs/runs; rerun `make run` after reconnecting if hot reload is needed |
 | Admin dashboard is placeholder-only | Keep until backend/admin roadmap phases |
-| Physical phone smoke for Money is pending | Rebuild/restart Docker, run the app, and test linked payment plus expense flows on IQOO |
+| Phase 2 physical phone smoke is pending | Rebuild/restart Docker, run the app, and test Today tasks, call outcomes, and notifications on IQOO |
+| Android notification permission depends on user approval | Allow notifications on the first run when prompted |
+| Dialer return behavior can vary by Android device | After tapping Call, return to the app and save the outcome sheet |
 | AI parsing not implemented | Start only after manual CRUD flows exist |
 | AI provider prices can change | Keep env cost hints updated from OpenAI/Groq pricing pages |
 | Secure production secrets are placeholders | Replace `.env` values before deployment |
@@ -625,6 +673,26 @@ Status: Phase 1E polish and silent sync reliability implemented and verified; re
 | Ledger delete boundary | Money receivable/payable rows stay non-deletable because they are computed aggregates |
 | Phase boundary | No Today/tasks, AI, reports, admin, or release assets in Phase 1E |
 
+## Phase 2 Data Decisions
+
+| Item | Decision |
+|---|---|
+| Phase shape | One coordinated Phase 2 with internal 2A Tasks, 2B Today, and 2C Calls/Notifications gates |
+| Task IDs | Flutter sends UUID text IDs and `syncId`; backend accepts client IDs |
+| Task sync | Drift write happens first, then pending sync enqueue and immediate best-effort API sync |
+| Call-log IDs | Flutter sends UUID text IDs and `syncId`; backend accepts client IDs |
+| Call-log sync | Drift write happens first, then pending sync enqueue and immediate best-effort API sync |
+| Today source | Today combines local tasks with deal-driven payment and delivery attention cards |
+| Date policy | Flutter uses local device date and sends `date=YYYY-MM-DD` to backend |
+| Call outcome policy | Saving an outcome marks the source call task done |
+| Follow-up tasks | Flutter generates follow-up task ID/`syncId` so offline records and server side effects converge |
+| Payment promised | Requires promised date; promised amount is optional |
+| No-answer follow-up | Tomorrow at the original task time, or 10:00 AM if no original time exists |
+| New-order follow-up | Tomorrow at 10:00 AM |
+| Notifications | Local only; rescheduled after auth, foreground resume, refresh, and task changes |
+| Notification copy | Uses `₹` for user-facing money text |
+| Phase boundary | No AI parsing, reports, admin dashboard, advanced insights screen, or release assets |
+
 ## Next Step
 
-Smoke Phase 1E on the IQOO: run `make run`, add or verify a person, deal, payment, Business expense, and Personal expense; pull refresh People, Deals, Money, and Person Profile Deals/Payments; test delete + undo on main lists and profile tabs; relaunch and confirm records persist. After that, move to Phase 2 Today/Tasks planning.
+Smoke Phase 2 on the IQOO: run `make build`, `make up`, `make migrate`, `make health`, then `make run`; create a task, postpone it, complete it, create a call task, tap Call, return to the app, save an outcome, confirm the follow-up appears, verify the People profile Calls tab, relaunch, pull refresh, and allow notifications when Android asks.

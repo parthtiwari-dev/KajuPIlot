@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_controller.dart';
+import '../../features/today/data/tasks_repository.dart';
 import 'sync_coordinator.dart';
 
 class SyncLifecycleRunner extends ConsumerStatefulWidget {
@@ -34,7 +35,7 @@ class _SyncLifecycleRunnerState extends ConsumerState<SyncLifecycleRunner>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed &&
         ref.read(authControllerProvider).valueOrNull != null) {
-      unawaited(ref.read(syncCoordinatorProvider).retryAll());
+      unawaited(_retryAndReschedule());
     }
   }
 
@@ -47,10 +48,15 @@ class _SyncLifecycleRunnerState extends ConsumerState<SyncLifecycleRunner>
       final wasSignedOut = previous?.valueOrNull == null;
       final isSignedIn = next.valueOrNull != null;
       if (wasSignedOut && isSignedIn) {
-        unawaited(ref.read(syncCoordinatorProvider).retryAll());
+        unawaited(_retryAndReschedule());
       }
     });
 
     return widget.child;
+  }
+
+  Future<void> _retryAndReschedule() async {
+    await ref.read(syncCoordinatorProvider).retryAll();
+    await ref.read(tasksRepositoryProvider).rescheduleNotificationsForToday();
   }
 }

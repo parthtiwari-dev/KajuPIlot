@@ -22,6 +22,9 @@ import '../money/data/money_models.dart';
 import '../money/data/payments_repository.dart';
 import '../money/widgets/payment_card.dart';
 import '../money/widgets/payment_sheet.dart';
+import '../today/data/call_logs_repository.dart';
+import '../today/data/today_models.dart';
+import '../today/widgets/call_log_card.dart';
 import 'data/parties_repository.dart';
 import 'data/party_models.dart';
 import 'widgets/person_sheet.dart';
@@ -131,10 +134,7 @@ class _PersonProfileScreenState extends ConsumerState<PersonProfileScreen>
                   children: [
                     _ProfileDealsTab(partyId: party.id),
                     _ProfilePaymentsTab(partyId: party.id),
-                    const _ProfileEmptyTab(
-                      icon: Icons.call_outlined,
-                      title: 'No calls yet',
-                    ),
+                    _ProfileCallsTab(partyId: party.id),
                     _NotesTab(
                       controller: _notesController,
                       onChanged: (value) => _saveNotes(party, value),
@@ -555,6 +555,77 @@ class _ProfilePaymentsTab extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+class _ProfileCallsTab extends ConsumerWidget {
+  const _ProfileCallsTab({required this.partyId});
+
+  final String partyId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final calls = ref.watch(
+      callLogListProvider(CallLogListQuery(partyId: partyId)),
+    );
+
+    return calls.when(
+      loading: () => _ProfileRefreshList(
+        onRefresh: () => _refresh(ref),
+        children: const [_ProfileTabLoading()],
+      ),
+      error: (_, __) => _ProfileRefreshList(
+        onRefresh: () => _refresh(ref),
+        children: const [
+          _ProfileEmptyTab(
+            icon: Icons.cloud_off_outlined,
+            title: 'Calls are saved locally',
+            body: 'Pull down to refresh when connection is back.',
+          ),
+        ],
+      ),
+      data: (items) {
+        if (items.isEmpty) {
+          return _ProfileRefreshList(
+            onRefresh: () => _refresh(ref),
+            children: const [
+              _ProfileEmptyTab(
+                icon: Icons.call_outlined,
+                title: 'No calls yet',
+                body: 'Call outcomes will appear here after Today tasks.',
+              ),
+            ],
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () => _refresh(ref),
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(top: KajuSpacing.md),
+            itemBuilder: (context, index) {
+              return CallLogCard(item: items[index]);
+            },
+            separatorBuilder: (_, __) => const SizedBox(
+              height: KajuSpacing.md,
+            ),
+            itemCount: items.length,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _refresh(WidgetRef ref) async {
+    try {
+      await ref.read(syncCoordinatorProvider).retryAll();
+      await ref.read(callLogsRepositoryProvider).refresh(
+            query: CallLogListQuery(partyId: partyId),
+            flushPending: false,
+          );
+    } catch (_) {
+      // Refresh is intentionally quiet; local profile data remains visible.
+    }
   }
 }
 

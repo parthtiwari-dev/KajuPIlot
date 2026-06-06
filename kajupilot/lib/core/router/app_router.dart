@@ -9,6 +9,7 @@ import '../../features/people/person_profile_screen.dart';
 import '../../features/setup/setup_screen.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/shell/empty_feature_screen.dart';
+import '../../features/today/today_screen.dart';
 import '../auth/auth_controller.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -56,13 +57,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/today',
             pageBuilder: (context, state) => _tabPage(
               state,
-              const EmptyFeatureScreen(
-                key: Key('feature-today-screen'),
-                title: 'Today',
-                eyebrow: 'Your daily command center',
-                body: 'Nothing on the agenda yet.',
-                icon: Icons.today_outlined,
-              ),
+              const TodayScreen(),
             ),
           ),
           GoRoute(

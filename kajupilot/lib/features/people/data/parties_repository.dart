@@ -79,6 +79,13 @@ class PartiesRepository {
         .watchSingleOrNull();
   }
 
+  Future<List<Party>> localParties() {
+    return (_database.select(_database.parties)
+          ..where((row) => row.deletedAt.isNull())
+          ..orderBy([(row) => OrderingTerm.asc(row.name)]))
+        .get();
+  }
+
   Future<Party?> getParty(String partyId) {
     return (_database.select(_database.parties)
           ..where((row) => row.id.equals(partyId) & row.deletedAt.isNull()))

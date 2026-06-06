@@ -6,6 +6,8 @@ import '../../features/deals/data/deals_repository.dart';
 import '../../features/money/data/expenses_repository.dart';
 import '../../features/money/data/payments_repository.dart';
 import '../../features/people/data/parties_repository.dart';
+import '../../features/today/data/call_logs_repository.dart';
+import '../../features/today/data/tasks_repository.dart';
 
 typedef SyncTask = Future<void> Function();
 
@@ -16,6 +18,8 @@ final syncCoordinatorProvider = Provider<SyncCoordinator>((ref) {
       () => ref.read(dealsRepositoryProvider).flushPendingDealSync(),
       () => ref.read(paymentsRepositoryProvider).flushPendingPaymentSync(),
       () => ref.read(expensesRepositoryProvider).flushPendingExpenseSync(),
+      () => ref.read(tasksRepositoryProvider).flushPendingTaskSync(),
+      () => ref.read(callLogsRepositoryProvider).flushPendingCallLogSync(),
     ],
   );
 });
