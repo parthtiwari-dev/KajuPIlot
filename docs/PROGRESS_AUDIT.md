@@ -2,7 +2,7 @@
 
 Date: 2026-06-06
 Branch: `main`
-Status: Phase 0 foundation implemented and verified by automated checks; APK debug build passes; full Docker plus physical-device smoke run still pending on the user's machine
+Status: Phase 0 foundation implemented and verified by automated checks; APK debug build passes; OpenAI/Groq AI provider switch added; full Docker plus physical-device smoke run still pending on the user's machine
 
 ## Branch And Repo
 
@@ -61,6 +61,7 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Add `/auth/me` endpoint | Done |
 | Add JWT strategy skeleton | Done |
 | Add roles decorator/guard skeleton | Done |
+| Add AI provider switch foundation | Done, `AI_PROVIDER=openai` or `AI_PROVIDER=groq` |
 | Keep Phase 1 CRUD out | Done |
 | Keep AI parsing out | Done |
 
@@ -126,6 +127,24 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Prisma schema | Matches roadmap business model for Phase 0 foundation |
 | Prisma migration | Initial migration added |
 | Tests | Auth service/controller specs added |
+| AI model gateway | Added for future parsing/insight calls |
+| AI provider config endpoint | Added `GET /api/v1/ai/providers`, returns active provider/model/cost hints without secrets |
+
+## Phase 0 AI Provider Switch
+
+| Task | Result |
+|---|---|
+| One active provider switch | Done with `AI_PROVIDER` |
+| OpenAI key | `OPENAI_API_KEY` |
+| OpenAI default model | `gpt-4o-mini` |
+| OpenAI cost hints | `OPENAI_INPUT_COST_PER_1M`, `OPENAI_OUTPUT_COST_PER_1M` |
+| Groq key | `GROQ_API_KEY` |
+| Groq default model | `meta-llama/llama-4-scout-17b-16e-instruct` |
+| Groq cost hints | `GROQ_INPUT_COST_PER_1M`, `GROQ_OUTPUT_COST_PER_1M` |
+| Shared generation gateway | Added `AiService` |
+| Provider config service | Added `AiConfigService` |
+| Secret exposure | API keys are not returned by the config endpoint |
+| AI parsing | Still intentionally not implemented |
 
 ## Phase 0 Admin/Docker Foundation
 
@@ -161,6 +180,8 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Next.js admin | `^15.5.18` |
 | React admin | `^18.3.1` |
 | Tailwind admin | `^3.4.17` |
+| OpenAI SDK | `^6.42.0` |
+| Groq SDK | `^0.26.0` |
 
 ## Phase -1 Files Added
 
@@ -188,8 +209,9 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Flutter tests | `kajupilot/test/widget_test.dart` |
 | Backend health | `health.controller.ts`, `health.module.ts` |
 | Backend auth | `auth.controller.ts`, `auth.service.ts`, setup DTO, JWT strategy, roles decorator, roles guard, token payload type |
+| Backend AI | `ai.module.ts`, `ai.controller.ts`, `ai.service.ts`, `ai-config.service.ts` |
 | Backend Prisma | `prisma.module.ts`, `prisma.service.ts`, `prisma/schema.prisma` |
-| Backend tests | `auth.service.spec.ts`, `auth.controller.spec.ts` |
+| Backend tests | `auth.service.spec.ts`, `auth.controller.spec.ts`, `ai-config.service.spec.ts` |
 | Admin shell | `kajupilot-admin/app/page.tsx`, `layout.tsx`, `globals.css` |
 
 ## Verification
@@ -202,6 +224,7 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | `flutter.bat test` | Pass, 3 widget tests |
 | `flutter.bat build apk --debug` | Pass |
 | `npm.cmd run build` in API | Pass |
+| `npm.cmd run format` in API | Pass |
 | `npm.cmd test` in API | Pass, 2 suites / 5 tests |
 | `npm.cmd audit` in API | Pass, 0 vulnerabilities |
 | Prisma validate with `DATABASE_URL` | Pass |
@@ -226,6 +249,8 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Java was missing for APK builds | Installed real Temurin JDK 17 on Windows |
 | PyCharm JBR lacked `jlink.exe` | Switched to full JDK install |
 | Next 14 line had audit advisories | Used patched Next 15 line while keeping admin scaffold minimal |
+| AI provider choice could become scattered | Added one backend AI gateway and one `AI_PROVIDER` switch before parsing code exists |
+| API format script targeted a missing `test/` folder | Narrowed the format script to `src/**/*.ts` so it passes cleanly |
 
 ## Upgrade Notes
 
@@ -237,7 +262,7 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Backend | NestJS 11 used for current supported package line |
 | Admin | Next.js 15 used instead of roadmap Next 14 because audit health is cleaner |
 | Docker | Compose file is production-oriented; a dev override may be useful later |
-| AI | Groq SDK installed for future phases but AI parsing intentionally not implemented yet |
+| AI | OpenAI and Groq SDKs installed; one provider switch added; AI parsing intentionally not implemented yet |
 
 ## Known Risks
 
@@ -250,6 +275,7 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Admin dashboard is placeholder-only | Keep until backend/admin roadmap phases |
 | Phase 1 CRUD not implemented | Start only after Phase 0 local run is proven |
 | AI parsing not implemented | Start only after manual CRUD flows exist |
+| AI provider prices can change | Keep env cost hints updated from OpenAI/Groq pricing pages |
 | Secure production secrets are placeholders | Replace `.env` values before deployment |
 | Single-device assumption still active | Multi-device sync conflict handling can wait |
 
@@ -265,6 +291,7 @@ Status: Phase 0 foundation implemented and verified by automated checks; APK deb
 | Money storage | Integer paise locally; decimal/string conversion deferred to API boundary work |
 | Sync queue | `pending_sync` exists locally for future offline-first writes |
 | Manual fallback | Preserved as core rule for future AI features |
+| AI provider choice | Default to OpenAI GPT-4o mini; switch to Groq by changing `AI_PROVIDER=groq` |
 | Backend auth | JWT-shaped device token with stored-token validation |
 | Admin | Keep as buildable placeholder until later phases |
 

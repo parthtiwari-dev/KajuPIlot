@@ -51,7 +51,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                           color: colors.accentMuted,
                           borderRadius: BorderRadius.circular(KajuRadius.lg),
                         ),
-                        child: Icon(Icons.spa_outlined, color: colors.accent),
+                        child: Icon(Icons.store_outlined, color: colors.accent),
                       ),
                     ),
                     const SizedBox(height: KajuSpacing.lg),

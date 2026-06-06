@@ -160,6 +160,10 @@ class KajuTheme {
             fontWeight: FontWeight.w600,
             color: colors.textPrimary,
           ),
+          amountSmall: mono.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+            color: colors.textPrimary,
+          ),
         ),
       ],
     );
@@ -170,19 +174,23 @@ class KajuAmountTextTheme extends ThemeExtension<KajuAmountTextTheme> {
   const KajuAmountTextTheme({
     required this.amountLarge,
     required this.amountMedium,
+    required this.amountSmall,
   });
 
   final TextStyle? amountLarge;
   final TextStyle? amountMedium;
+  final TextStyle? amountSmall;
 
   @override
   KajuAmountTextTheme copyWith({
     TextStyle? amountLarge,
     TextStyle? amountMedium,
+    TextStyle? amountSmall,
   }) {
     return KajuAmountTextTheme(
       amountLarge: amountLarge ?? this.amountLarge,
       amountMedium: amountMedium ?? this.amountMedium,
+      amountSmall: amountSmall ?? this.amountSmall,
     );
   }
 
@@ -198,6 +206,7 @@ class KajuAmountTextTheme extends ThemeExtension<KajuAmountTextTheme> {
     return KajuAmountTextTheme(
       amountLarge: TextStyle.lerp(amountLarge, other.amountLarge, t),
       amountMedium: TextStyle.lerp(amountMedium, other.amountMedium, t),
+      amountSmall: TextStyle.lerp(amountSmall, other.amountSmall, t),
     );
   }
 }

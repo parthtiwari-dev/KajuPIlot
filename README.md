@@ -45,7 +45,7 @@ Every AI-assisted action must also be possible manually through the UI. AI is a 
 | Backend API | Node.js 20 LTS, NestJS, Prisma | Auth setup, validation, sync-ready schema, business logic, AI parsing, admin APIs |
 | Database | PostgreSQL 16 | Durable server-side business records with decimal-safe money fields |
 | Jobs/cache | Redis, BullMQ | Scheduled insights, retries, rate limits, cached summaries |
-| AI | Groq SDK | Plain-language parsing and daily/weekly business insights |
+| AI | OpenAI SDK, Groq SDK | Provider-switchable model gateway for future plain-language parsing and insights |
 | Admin | Next.js App Router, Tailwind, shadcn-compatible utilities, Recharts | Private visibility into activity, records, AI logs, and exports |
 | Infrastructure | Docker Compose, Caddy | VPS deployment with HTTPS reverse proxy |
 
@@ -75,7 +75,7 @@ The roadmap calls out Next.js 14 for the admin. This scaffold uses the patched N
 - Android Studio or Android SDK tooling
 - Node.js 20 LTS for production parity
 - Docker Desktop or Docker Engine with Compose
-- A Groq API key
+- OpenAI and Groq API keys for AI provider switching
 - An Oracle VPS or equivalent Linux server for deployment
 
 On Windows PowerShell, prefer `npm.cmd` if direct `npm` execution is blocked by script policy.
@@ -188,7 +188,6 @@ Template:
 
 ```env
 DB_PASSWORD=replace_me_with_a_strong_password
-GROQ_API_KEY=replace_me
 JWT_SECRET=replace_me_with_a_64_character_random_secret
 ADMIN_SETUP_CODE=KAJU-2026
 ADMIN_SECRET=replace_me
@@ -197,6 +196,56 @@ ADMIN_PASS_HASH=replace_me_with_caddy_hash_password_output
 API_HOST=api.localhost
 ADMIN_HOST=admin.localhost
 NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+AI_PROVIDER=openai
+OPENAI_API_KEY=replace_me
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_INPUT_COST_PER_1M=0.15
+OPENAI_OUTPUT_COST_PER_1M=0.60
+GROQ_API_KEY=replace_me
+GROQ_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
+GROQ_INPUT_COST_PER_1M=0.11
+GROQ_OUTPUT_COST_PER_1M=0.34
+AI_MAX_TOKENS=700
+AI_TEMPERATURE=0.2
+```
+
+## AI Provider Switch
+
+The backend has one active AI switch:
+
+```env
+AI_PROVIDER=openai
+```
+
+Allowed values are:
+
+- `openai`
+- `groq`
+
+Default OpenAI model:
+
+```env
+OPENAI_MODEL=gpt-4o-mini
+```
+
+Default Groq model:
+
+```env
+GROQ_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
+```
+
+To switch all future AI calls to Groq, change only:
+
+```env
+AI_PROVIDER=groq
+```
+
+The cost values are editable env hints used by the backend cost estimator. Keep them updated from the provider pricing pages when pricing changes.
+
+Check the active provider without exposing keys:
+
+```powershell
+Invoke-RestMethod http://localhost:3000/api/v1/ai/providers
 ```
 
 ## Docker

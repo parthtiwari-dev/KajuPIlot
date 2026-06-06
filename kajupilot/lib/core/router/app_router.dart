@@ -53,7 +53,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const EmptyFeatureScreen(
               key: Key('feature-today-screen'),
               title: 'Today',
-              eyebrow: 'Friday command center',
+              eyebrow: 'Your daily command center',
               body: 'Nothing on the agenda yet.',
               icon: Icons.today_outlined,
             ),
@@ -124,7 +124,7 @@ class KajuSplashScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Icon(
-                Icons.spa_outlined,
+                Icons.store_outlined,
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),

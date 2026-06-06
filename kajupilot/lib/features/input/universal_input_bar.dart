@@ -37,7 +37,7 @@ class UniversalInputBar extends StatelessWidget {
                 const SizedBox(width: KajuSpacing.sm),
                 Expanded(
                   child: Text(
-                    'Sold 50kg W320 to Amit at Rs 780...',
+                    'Sold 50kg W320 to Amit at ₹780...',
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: colors.textSecondary,

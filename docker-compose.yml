@@ -35,9 +35,19 @@ services:
     environment:
       DATABASE_URL: postgresql://kajuadmin:${DB_PASSWORD}@postgres:5432/kajupilot
       REDIS_URL: redis://redis:6379
-      GROQ_API_KEY: ${GROQ_API_KEY}
       JWT_SECRET: ${JWT_SECRET}
       ADMIN_SETUP_CODE: ${ADMIN_SETUP_CODE}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_INPUT_COST_PER_1M: ${OPENAI_INPUT_COST_PER_1M:-0.15}
+      OPENAI_OUTPUT_COST_PER_1M: ${OPENAI_OUTPUT_COST_PER_1M:-0.60}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_MODEL: ${GROQ_MODEL:-meta-llama/llama-4-scout-17b-16e-instruct}
+      GROQ_INPUT_COST_PER_1M: ${GROQ_INPUT_COST_PER_1M:-0.11}
+      GROQ_OUTPUT_COST_PER_1M: ${GROQ_OUTPUT_COST_PER_1M:-0.34}
+      AI_MAX_TOKENS: ${AI_MAX_TOKENS:-700}
+      AI_TEMPERATURE: ${AI_TEMPERATURE:-0.2}
       NODE_ENV: production
       PORT: 3000
     depends_on:
