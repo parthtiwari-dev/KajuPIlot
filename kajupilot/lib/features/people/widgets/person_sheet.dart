@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/db/app_database.dart';
+import '../../../core/platform/phone_contact_picker.dart';
 import '../../../core/theme/kaju_colors.dart';
 import '../../../core/theme/spacing.dart';
 import '../data/parties_repository.dart';
@@ -32,6 +34,7 @@ class _PersonSheetState extends ConsumerState<PersonSheet> {
   late final TextEditingController _notesController;
   late PartyTypeValue _type;
   var _isSaving = false;
+  var _isImportingContact = false;
 
   @override
   void initState() {
@@ -93,6 +96,17 @@ class _PersonSheetState extends ConsumerState<PersonSheet> {
                 Text(
                   widget.party == null ? 'Add person' : 'Edit person',
                   style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: KajuSpacing.lg),
+                OutlinedButton.icon(
+                  key: const Key('import-phone-contact-button'),
+                  onPressed: _isImportingContact ? null : _importPhoneContact,
+                  icon: const Icon(Icons.contact_page_outlined),
+                  label: Text(
+                    _isImportingContact
+                        ? 'Opening contacts...'
+                        : 'Import from phone',
+                  ),
                 ),
                 const SizedBox(height: KajuSpacing.lg),
                 TextFormField(
@@ -177,6 +191,46 @@ class _PersonSheetState extends ConsumerState<PersonSheet> {
 
     if (mounted) {
       Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _importPhoneContact() async {
+    setState(() => _isImportingContact = true);
+
+    try {
+      final contact = await ref.read(phoneContactPickerProvider).pickContact();
+      if (!mounted) {
+        return;
+      }
+
+      if (contact == null) {
+        return;
+      }
+
+      final name = contact.name?.trim();
+      final phone = contact.phone?.trim();
+      if (name != null && name.isNotEmpty) {
+        _nameController.text = name;
+      }
+      if (phone != null && phone.isNotEmpty) {
+        _phoneController.text = phone;
+      }
+
+      setState(() {});
+    } on PlatformException catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.message ?? 'Could not import contact'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isImportingContact = false);
+      }
     }
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kajupilot/core/db/app_database.dart';
 import 'package:kajupilot/core/network/api_client.dart';
+import 'package:kajupilot/core/platform/phone_contact_picker.dart';
 import 'package:kajupilot/core/sync/pending_sync_service.dart';
 import 'package:kajupilot/core/theme/app_theme.dart';
 import 'package:kajupilot/features/people/data/parties_api.dart';
@@ -84,6 +85,51 @@ void main() {
     final parties = await database.select(database.parties).get();
     expect(parties.single.name, 'Ramesh Sahu');
   });
+
+  testWidgets('Person sheet imports phone contact into form fields', (
+    tester,
+  ) async {
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    final repository = PartiesRepository(
+      database: database,
+      api: _OfflinePartiesApi(),
+      pendingSync: PendingSyncService(database),
+      currentUserId: 'local-owner',
+      idGenerator: _fixedIds(),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          partiesRepositoryProvider.overrideWithValue(repository),
+          phoneContactPickerProvider.overrideWithValue(
+            const _FakePhoneContactPicker(
+              PhoneContact(name: 'Amit Verma', phone: '+91 98765 43210'),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          theme: KajuTheme.dark(),
+          home: const Scaffold(body: PersonSheet()),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.byKey(const Key('import-phone-contact-button')));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Amit Verma'), findsOneWidget);
+    expect(find.text('+91 98765 43210'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('person-save-button')));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final parties = await database.select(database.parties).get();
+    expect(parties.single.name, 'Amit Verma');
+    expect(parties.single.phone, '+91 98765 43210');
+  });
 }
 
 Widget peopleWidget(
@@ -134,4 +180,13 @@ class _OfflinePartiesApi extends PartiesApi {
   }) async {
     throw StateError('offline in widget test');
   }
+}
+
+class _FakePhoneContactPicker implements PhoneContactPicker {
+  const _FakePhoneContactPicker(this.contact);
+
+  final PhoneContact? contact;
+
+  @override
+  Future<PhoneContact?> pickContact() async => contact;
 }

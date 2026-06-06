@@ -2,7 +2,7 @@
 
 Date: 2026-06-06
 Branch: `main`
-Status: Phase 1B People/Parties CRUD implemented and verified; Docker API rebuilt/restarted; APK debug build passes; Phase 1C Deals is next
+Status: Phase 1B.1 contact import polish implemented and verified; People/Parties CRUD is live; APK debug build passes; Phase 1C Deals is next
 
 ## Branch And Repo
 
@@ -117,6 +117,19 @@ Status: Phase 1B People/Parties CRUD implemented and verified; Docker API rebuil
 | Add profile notes editing | Done, debounced local-first update |
 | Keep Deals/Payments/Calls out | Done, profile tabs show empty states |
 | Keep AI parsing out | Done |
+
+## Phase 1B.1 Checklist
+
+| Task | Result |
+|---|---|
+| Add phone contact import path | Done |
+| Use Android native contact picker | Done, no full contact sync |
+| Add `Import from phone` button to Add/Edit Person sheet | Done |
+| Fill person name from selected contact | Done |
+| Fill phone number from selected contact | Done |
+| Keep manual entry unchanged | Done |
+| Save imported contact through existing local-first flow | Done |
+| Avoid roadmap edits | Done |
 
 ## Phase 0 App Shell Lock
 
@@ -277,7 +290,7 @@ Status: Phase 1B People/Parties CRUD implemented and verified; Docker API rebuil
 | `flutter pub run build_runner build --delete-conflicting-outputs` | Pass |
 | `dart.bat format lib test` | Pass |
 | `flutter.bat analyze` | Pass |
-| `flutter.bat test` | Pass, 17 Flutter tests |
+| `flutter.bat test` | Pass, 18 Flutter tests |
 | `flutter.bat build apk --debug` | Pass |
 | `npm.cmd run build` in API | Pass |
 | `npm.cmd run format` in API | Pass |
@@ -291,8 +304,9 @@ Status: Phase 1B People/Parties CRUD implemented and verified; Docker API rebuil
 | Docker API/admin rebuild | Pass with `make build` |
 | Docker dev stack restart | Pass with `make up` |
 | Authenticated Parties route smoke | Pass, `GET /api/v1/parties` returned successfully |
+| Android contact picker bridge compile | Pass through debug APK build |
 | Manual APK install/run | Pass, user confirmed IQOO opens app UI |
-| Manual setup flow against live backend | Pending latest Phase 1B physical-device run |
+| Manual setup flow against live backend | Pending latest Phase 1B.1 physical-device contact import run |
 
 ## Issues Found And Resolved
 
@@ -385,6 +399,15 @@ Status: Phase 1B People/Parties CRUD implemented and verified; Docker API rebuil
 | Money stats | Party pending/ledger values are computed from existing deal/payment schema and return decimal strings at API boundary |
 | Profile tabs | Deals, Payments, Calls remain empty states until their later CRUD slices |
 
+## Phase 1B.1 Data Decisions
+
+| Item | Decision |
+|---|---|
+| Contact import scope | User-triggered single-contact picker only |
+| Contact storage | Selected contact fills the existing Add/Edit Person form; save uses current People repository |
+| Contact permissions | No bulk contact sync or background read |
+| Dependency policy | Used a native Android method channel instead of adding a contacts package |
+
 ## Next Step
 
-Smoke Phase 1B on the IQOO: run `make run`, open People, add a person, relaunch, confirm the person remains, pull refresh, then test delete and undo. After that, start Phase 1C Deals CRUD end-to-end.
+Smoke Phase 1B.1 on the IQOO: run `make run`, open People, tap Add Person, tap Import from phone, choose a contact, confirm name and phone fill in, save, relaunch, and confirm the person remains. After that, start Phase 1C Deals CRUD end-to-end.
