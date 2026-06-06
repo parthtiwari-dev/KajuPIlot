@@ -1737,6 +1737,479 @@ class DealsCompanion extends UpdateCompanion<Deal> {
   }
 }
 
+class $DealItemsTable extends DealItems
+    with TableInfo<$DealItemsTable, DealItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DealItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _dealIdMeta = const VerificationMeta('dealId');
+  @override
+  late final GeneratedColumn<String> dealId = GeneratedColumn<String>(
+      'deal_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _gradeMeta = const VerificationMeta('grade');
+  @override
+  late final GeneratedColumn<String> grade = GeneratedColumn<String>(
+      'grade', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _quantityTextMeta =
+      const VerificationMeta('quantityText');
+  @override
+  late final GeneratedColumn<String> quantityText = GeneratedColumn<String>(
+      'quantity_text', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _rateTextMeta =
+      const VerificationMeta('rateText');
+  @override
+  late final GeneratedColumn<String> rateText = GeneratedColumn<String>(
+      'rate_text', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _lineTotalPaiseMeta =
+      const VerificationMeta('lineTotalPaise');
+  @override
+  late final GeneratedColumn<int> lineTotalPaise = GeneratedColumn<int>(
+      'line_total_paise', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _sortOrderMeta =
+      const VerificationMeta('sortOrder');
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+      'sort_order', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        dealId,
+        grade,
+        quantityText,
+        rateText,
+        lineTotalPaise,
+        sortOrder,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'deal_items';
+  @override
+  VerificationContext validateIntegrity(Insertable<DealItem> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('deal_id')) {
+      context.handle(_dealIdMeta,
+          dealId.isAcceptableOrUnknown(data['deal_id']!, _dealIdMeta));
+    } else if (isInserting) {
+      context.missing(_dealIdMeta);
+    }
+    if (data.containsKey('grade')) {
+      context.handle(
+          _gradeMeta, grade.isAcceptableOrUnknown(data['grade']!, _gradeMeta));
+    } else if (isInserting) {
+      context.missing(_gradeMeta);
+    }
+    if (data.containsKey('quantity_text')) {
+      context.handle(
+          _quantityTextMeta,
+          quantityText.isAcceptableOrUnknown(
+              data['quantity_text']!, _quantityTextMeta));
+    } else if (isInserting) {
+      context.missing(_quantityTextMeta);
+    }
+    if (data.containsKey('rate_text')) {
+      context.handle(_rateTextMeta,
+          rateText.isAcceptableOrUnknown(data['rate_text']!, _rateTextMeta));
+    }
+    if (data.containsKey('line_total_paise')) {
+      context.handle(
+          _lineTotalPaiseMeta,
+          lineTotalPaise.isAcceptableOrUnknown(
+              data['line_total_paise']!, _lineTotalPaiseMeta));
+    } else if (isInserting) {
+      context.missing(_lineTotalPaiseMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(_sortOrderMeta,
+          sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DealItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DealItem(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      dealId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}deal_id'])!,
+      grade: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}grade'])!,
+      quantityText: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}quantity_text'])!,
+      rateText: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}rate_text']),
+      lineTotalPaise: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}line_total_paise'])!,
+      sortOrder: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}sort_order'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $DealItemsTable createAlias(String alias) {
+    return $DealItemsTable(attachedDatabase, alias);
+  }
+}
+
+class DealItem extends DataClass implements Insertable<DealItem> {
+  final String id;
+  final String dealId;
+  final String grade;
+  final String quantityText;
+  final String? rateText;
+  final int lineTotalPaise;
+  final int sortOrder;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const DealItem(
+      {required this.id,
+      required this.dealId,
+      required this.grade,
+      required this.quantityText,
+      this.rateText,
+      required this.lineTotalPaise,
+      required this.sortOrder,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['deal_id'] = Variable<String>(dealId);
+    map['grade'] = Variable<String>(grade);
+    map['quantity_text'] = Variable<String>(quantityText);
+    if (!nullToAbsent || rateText != null) {
+      map['rate_text'] = Variable<String>(rateText);
+    }
+    map['line_total_paise'] = Variable<int>(lineTotalPaise);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  DealItemsCompanion toCompanion(bool nullToAbsent) {
+    return DealItemsCompanion(
+      id: Value(id),
+      dealId: Value(dealId),
+      grade: Value(grade),
+      quantityText: Value(quantityText),
+      rateText: rateText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rateText),
+      lineTotalPaise: Value(lineTotalPaise),
+      sortOrder: Value(sortOrder),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DealItem.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DealItem(
+      id: serializer.fromJson<String>(json['id']),
+      dealId: serializer.fromJson<String>(json['dealId']),
+      grade: serializer.fromJson<String>(json['grade']),
+      quantityText: serializer.fromJson<String>(json['quantityText']),
+      rateText: serializer.fromJson<String?>(json['rateText']),
+      lineTotalPaise: serializer.fromJson<int>(json['lineTotalPaise']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'dealId': serializer.toJson<String>(dealId),
+      'grade': serializer.toJson<String>(grade),
+      'quantityText': serializer.toJson<String>(quantityText),
+      'rateText': serializer.toJson<String?>(rateText),
+      'lineTotalPaise': serializer.toJson<int>(lineTotalPaise),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  DealItem copyWith(
+          {String? id,
+          String? dealId,
+          String? grade,
+          String? quantityText,
+          Value<String?> rateText = const Value.absent(),
+          int? lineTotalPaise,
+          int? sortOrder,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      DealItem(
+        id: id ?? this.id,
+        dealId: dealId ?? this.dealId,
+        grade: grade ?? this.grade,
+        quantityText: quantityText ?? this.quantityText,
+        rateText: rateText.present ? rateText.value : this.rateText,
+        lineTotalPaise: lineTotalPaise ?? this.lineTotalPaise,
+        sortOrder: sortOrder ?? this.sortOrder,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  DealItem copyWithCompanion(DealItemsCompanion data) {
+    return DealItem(
+      id: data.id.present ? data.id.value : this.id,
+      dealId: data.dealId.present ? data.dealId.value : this.dealId,
+      grade: data.grade.present ? data.grade.value : this.grade,
+      quantityText: data.quantityText.present
+          ? data.quantityText.value
+          : this.quantityText,
+      rateText: data.rateText.present ? data.rateText.value : this.rateText,
+      lineTotalPaise: data.lineTotalPaise.present
+          ? data.lineTotalPaise.value
+          : this.lineTotalPaise,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DealItem(')
+          ..write('id: $id, ')
+          ..write('dealId: $dealId, ')
+          ..write('grade: $grade, ')
+          ..write('quantityText: $quantityText, ')
+          ..write('rateText: $rateText, ')
+          ..write('lineTotalPaise: $lineTotalPaise, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, dealId, grade, quantityText, rateText,
+      lineTotalPaise, sortOrder, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DealItem &&
+          other.id == this.id &&
+          other.dealId == this.dealId &&
+          other.grade == this.grade &&
+          other.quantityText == this.quantityText &&
+          other.rateText == this.rateText &&
+          other.lineTotalPaise == this.lineTotalPaise &&
+          other.sortOrder == this.sortOrder &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DealItemsCompanion extends UpdateCompanion<DealItem> {
+  final Value<String> id;
+  final Value<String> dealId;
+  final Value<String> grade;
+  final Value<String> quantityText;
+  final Value<String?> rateText;
+  final Value<int> lineTotalPaise;
+  final Value<int> sortOrder;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const DealItemsCompanion({
+    this.id = const Value.absent(),
+    this.dealId = const Value.absent(),
+    this.grade = const Value.absent(),
+    this.quantityText = const Value.absent(),
+    this.rateText = const Value.absent(),
+    this.lineTotalPaise = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DealItemsCompanion.insert({
+    required String id,
+    required String dealId,
+    required String grade,
+    required String quantityText,
+    this.rateText = const Value.absent(),
+    required int lineTotalPaise,
+    this.sortOrder = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        dealId = Value(dealId),
+        grade = Value(grade),
+        quantityText = Value(quantityText),
+        lineTotalPaise = Value(lineTotalPaise),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<DealItem> custom({
+    Expression<String>? id,
+    Expression<String>? dealId,
+    Expression<String>? grade,
+    Expression<String>? quantityText,
+    Expression<String>? rateText,
+    Expression<int>? lineTotalPaise,
+    Expression<int>? sortOrder,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dealId != null) 'deal_id': dealId,
+      if (grade != null) 'grade': grade,
+      if (quantityText != null) 'quantity_text': quantityText,
+      if (rateText != null) 'rate_text': rateText,
+      if (lineTotalPaise != null) 'line_total_paise': lineTotalPaise,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DealItemsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? dealId,
+      Value<String>? grade,
+      Value<String>? quantityText,
+      Value<String?>? rateText,
+      Value<int>? lineTotalPaise,
+      Value<int>? sortOrder,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return DealItemsCompanion(
+      id: id ?? this.id,
+      dealId: dealId ?? this.dealId,
+      grade: grade ?? this.grade,
+      quantityText: quantityText ?? this.quantityText,
+      rateText: rateText ?? this.rateText,
+      lineTotalPaise: lineTotalPaise ?? this.lineTotalPaise,
+      sortOrder: sortOrder ?? this.sortOrder,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (dealId.present) {
+      map['deal_id'] = Variable<String>(dealId.value);
+    }
+    if (grade.present) {
+      map['grade'] = Variable<String>(grade.value);
+    }
+    if (quantityText.present) {
+      map['quantity_text'] = Variable<String>(quantityText.value);
+    }
+    if (rateText.present) {
+      map['rate_text'] = Variable<String>(rateText.value);
+    }
+    if (lineTotalPaise.present) {
+      map['line_total_paise'] = Variable<int>(lineTotalPaise.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DealItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('dealId: $dealId, ')
+          ..write('grade: $grade, ')
+          ..write('quantityText: $quantityText, ')
+          ..write('rateText: $rateText, ')
+          ..write('lineTotalPaise: $lineTotalPaise, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $PaymentsTable extends Payments with TableInfo<$PaymentsTable, Payment> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -4954,6 +5427,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $LocalUsersTable localUsers = $LocalUsersTable(this);
   late final $PartiesTable parties = $PartiesTable(this);
   late final $DealsTable deals = $DealsTable(this);
+  late final $DealItemsTable dealItems = $DealItemsTable(this);
   late final $PaymentsTable payments = $PaymentsTable(this);
   late final $ExpensesTable expenses = $ExpensesTable(this);
   late final $TasksTable tasks = $TasksTable(this);
@@ -4968,6 +5442,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         localUsers,
         parties,
         deals,
+        dealItems,
         payments,
         expenses,
         tasks,
@@ -5775,6 +6250,234 @@ typedef $$DealsTableProcessedTableManager = ProcessedTableManager<
     $$DealsTableUpdateCompanionBuilder,
     (Deal, BaseReferences<_$AppDatabase, $DealsTable, Deal>),
     Deal,
+    PrefetchHooks Function()>;
+typedef $$DealItemsTableCreateCompanionBuilder = DealItemsCompanion Function({
+  required String id,
+  required String dealId,
+  required String grade,
+  required String quantityText,
+  Value<String?> rateText,
+  required int lineTotalPaise,
+  Value<int> sortOrder,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$DealItemsTableUpdateCompanionBuilder = DealItemsCompanion Function({
+  Value<String> id,
+  Value<String> dealId,
+  Value<String> grade,
+  Value<String> quantityText,
+  Value<String?> rateText,
+  Value<int> lineTotalPaise,
+  Value<int> sortOrder,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$DealItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $DealItemsTable> {
+  $$DealItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get dealId => $composableBuilder(
+      column: $table.dealId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get grade => $composableBuilder(
+      column: $table.grade, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get quantityText => $composableBuilder(
+      column: $table.quantityText, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get rateText => $composableBuilder(
+      column: $table.rateText, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get lineTotalPaise => $composableBuilder(
+      column: $table.lineTotalPaise,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+      column: $table.sortOrder, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$DealItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DealItemsTable> {
+  $$DealItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get dealId => $composableBuilder(
+      column: $table.dealId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get grade => $composableBuilder(
+      column: $table.grade, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get quantityText => $composableBuilder(
+      column: $table.quantityText,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get rateText => $composableBuilder(
+      column: $table.rateText, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get lineTotalPaise => $composableBuilder(
+      column: $table.lineTotalPaise,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+      column: $table.sortOrder, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$DealItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DealItemsTable> {
+  $$DealItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dealId =>
+      $composableBuilder(column: $table.dealId, builder: (column) => column);
+
+  GeneratedColumn<String> get grade =>
+      $composableBuilder(column: $table.grade, builder: (column) => column);
+
+  GeneratedColumn<String> get quantityText => $composableBuilder(
+      column: $table.quantityText, builder: (column) => column);
+
+  GeneratedColumn<String> get rateText =>
+      $composableBuilder(column: $table.rateText, builder: (column) => column);
+
+  GeneratedColumn<int> get lineTotalPaise => $composableBuilder(
+      column: $table.lineTotalPaise, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$DealItemsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DealItemsTable,
+    DealItem,
+    $$DealItemsTableFilterComposer,
+    $$DealItemsTableOrderingComposer,
+    $$DealItemsTableAnnotationComposer,
+    $$DealItemsTableCreateCompanionBuilder,
+    $$DealItemsTableUpdateCompanionBuilder,
+    (DealItem, BaseReferences<_$AppDatabase, $DealItemsTable, DealItem>),
+    DealItem,
+    PrefetchHooks Function()> {
+  $$DealItemsTableTableManager(_$AppDatabase db, $DealItemsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DealItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DealItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DealItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> dealId = const Value.absent(),
+            Value<String> grade = const Value.absent(),
+            Value<String> quantityText = const Value.absent(),
+            Value<String?> rateText = const Value.absent(),
+            Value<int> lineTotalPaise = const Value.absent(),
+            Value<int> sortOrder = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              DealItemsCompanion(
+            id: id,
+            dealId: dealId,
+            grade: grade,
+            quantityText: quantityText,
+            rateText: rateText,
+            lineTotalPaise: lineTotalPaise,
+            sortOrder: sortOrder,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String dealId,
+            required String grade,
+            required String quantityText,
+            Value<String?> rateText = const Value.absent(),
+            required int lineTotalPaise,
+            Value<int> sortOrder = const Value.absent(),
+            required DateTime createdAt,
+            required DateTime updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              DealItemsCompanion.insert(
+            id: id,
+            dealId: dealId,
+            grade: grade,
+            quantityText: quantityText,
+            rateText: rateText,
+            lineTotalPaise: lineTotalPaise,
+            sortOrder: sortOrder,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$DealItemsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DealItemsTable,
+    DealItem,
+    $$DealItemsTableFilterComposer,
+    $$DealItemsTableOrderingComposer,
+    $$DealItemsTableAnnotationComposer,
+    $$DealItemsTableCreateCompanionBuilder,
+    $$DealItemsTableUpdateCompanionBuilder,
+    (DealItem, BaseReferences<_$AppDatabase, $DealItemsTable, DealItem>),
+    DealItem,
     PrefetchHooks Function()>;
 typedef $$PaymentsTableCreateCompanionBuilder = PaymentsCompanion Function({
   required String id,
@@ -7286,6 +7989,8 @@ class $AppDatabaseManager {
       $$PartiesTableTableManager(_db, _db.parties);
   $$DealsTableTableManager get deals =>
       $$DealsTableTableManager(_db, _db.deals);
+  $$DealItemsTableTableManager get dealItems =>
+      $$DealItemsTableTableManager(_db, _db.dealItems);
   $$PaymentsTableTableManager get payments =>
       $$PaymentsTableTableManager(_db, _db.payments);
   $$ExpensesTableTableManager get expenses =>

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/deals/deals_screen.dart';
 import '../../features/people/people_screen.dart';
 import '../../features/people/person_profile_screen.dart';
 import '../../features/setup/setup_screen.dart';
@@ -80,13 +81,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/deals',
             pageBuilder: (context, state) => _tabPage(
               state,
-              const EmptyFeatureScreen(
-                key: Key('feature-deals-screen'),
-                title: 'Deals',
-                eyebrow: 'Sales and purchases',
-                body: 'Deal cards will live here after manual entry starts.',
-                icon: Icons.inventory_2_outlined,
-              ),
+              const DealsScreen(),
             ),
           ),
           GoRoute(

@@ -86,11 +86,27 @@ model Deal {
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?
 
+  items        DealItem[]
   payments     Payment[]
 
   @@index([userId, status, deletedAt])
   @@index([partyId, deletedAt])
   @@index([paymentDue])
+}
+
+model DealItem {
+  id           String   @id @default(uuid())
+  dealId       String
+  deal         Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  grade        String
+  quantityText String
+  rateText     String?
+  totalAmount  Decimal  @db.Decimal(14, 2)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([dealId, sortOrder])
 }
 
 enum DealType {
