@@ -231,7 +231,7 @@ export class PartiesService {
       stats: {
         dealCount: deals.length,
         pendingAmount: totals.net.toFixed(2),
-        avgDelayDays: 0,
+        avgDelayDays: null,
         overdueAmount: totals.overdueAmount.toFixed(2),
       },
     };
@@ -351,7 +351,7 @@ export class PartiesService {
     };
   }
 
-  private cleanNullable(value?: string) {
+  private cleanNullable(value?: string | null) {
     const trimmed = value?.trim();
     return trimmed ? trimmed : null;
   }

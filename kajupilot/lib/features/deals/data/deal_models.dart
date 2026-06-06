@@ -219,8 +219,11 @@ class UpdateDealInput {
     this.totalPaise,
     this.paidPaise,
     this.deliveryDate,
+    this.clearDeliveryDate = false,
     this.paymentDue,
+    this.clearPaymentDue = false,
     this.notes,
+    this.clearNotes = false,
   });
 
   final String? partyId;
@@ -229,8 +232,11 @@ class UpdateDealInput {
   final int? totalPaise;
   final int? paidPaise;
   final DateTime? deliveryDate;
+  final bool clearDeliveryDate;
   final DateTime? paymentDue;
+  final bool clearPaymentDue;
   final String? notes;
+  final bool clearNotes;
 }
 
 int sumLineTotals(List<DealLineInput> items) {

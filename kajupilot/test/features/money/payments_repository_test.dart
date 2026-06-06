@@ -100,6 +100,41 @@ void main() {
         throwsStateError,
       );
     });
+
+    test('remote payment upsert does not mutate soft-deleted deals', () async {
+      api.remoteItems = [
+        PaymentListItem(
+          payment: testPayment(),
+          party: const PaymentPartySummary(
+            id: 'party-1',
+            name: 'Amit Verma',
+            type: 'CUSTOMER',
+            trustTag: 'NEW',
+          ),
+          deal: const PaymentDealSummary(
+            id: 'deal-1',
+            partyId: 'party-1',
+            type: 'SALE',
+            cashewGrade: 'W320',
+            totalPaise: 3900000,
+            paidPaise: 2500000,
+          ),
+        ),
+      ];
+      await (database.update(database.deals)
+            ..where((row) => row.id.equals('deal-1')))
+          .write(
+        DealsCompanion(
+          deletedAt: Value(DateTime.utc(2026, 6, 8)),
+        ),
+      );
+
+      await repository.refresh();
+
+      final deal = await database.select(database.deals).getSingle();
+      expect(deal.deletedAt, isNotNull);
+      expect(deal.paidPaise, 500000);
+    });
   });
 }
 
@@ -137,10 +172,41 @@ Future<void> seedDeal(AppDatabase database) {
       );
 }
 
+Payment testPayment() {
+  final now = DateTime.utc(2026, 6, 7);
+  return Payment(
+    id: 'payment-remote',
+    userId: 'server-user',
+    partyId: 'party-1',
+    dealId: 'deal-1',
+    type: PaymentTypeValue.received.apiValue,
+    amountPaise: 2000000,
+    method: null,
+    notes: null,
+    paymentDate: now,
+    syncId: 'payment-remote-sync',
+    createdAt: now,
+    updatedAt: now,
+    deletedAt: null,
+  );
+}
+
 class FakePaymentsApi extends PaymentsApi {
   FakePaymentsApi() : super(KajuApiClient(Dio()));
 
   bool failCreate = false;
+  List<PaymentListItem> remoteItems = const [];
+
+  @override
+  Future<List<PaymentListItem>> list({
+    String? partyId,
+    String? dealId,
+    PaymentTypeValue? type,
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    return remoteItems;
+  }
 
   @override
   Future<PaymentListItem> create({

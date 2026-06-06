@@ -10,7 +10,7 @@ export class UpdatePartyDto {
   @IsOptional()
   @IsString()
   @MaxLength(32)
-  phone?: string;
+  phone?: string | null;
 
   @IsOptional()
   @IsEnum(PartyType)
@@ -23,5 +23,5 @@ export class UpdatePartyDto {
   @IsOptional()
   @IsString()
   @MaxLength(1000)
-  notes?: string;
+  notes?: string | null;
 }

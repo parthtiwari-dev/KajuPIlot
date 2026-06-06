@@ -380,11 +380,11 @@ export class DealsService {
     return new Prisma.Decimal(value).toFixed(2);
   }
 
-  private optionalDate(value?: string) {
+  private optionalDate(value?: string | null) {
     return value ? new Date(value) : null;
   }
 
-  private cleanNullable(value?: string) {
+  private cleanNullable(value?: string | null) {
     const trimmed = value?.trim();
     return trimmed ? trimmed : null;
   }

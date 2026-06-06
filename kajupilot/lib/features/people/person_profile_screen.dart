@@ -264,7 +264,11 @@ class _ProfileStats extends ConsumerWidget {
             ),
             Expanded(
               child: _StatTile(
-                  label: 'Avg delay', value: '${value.avgDelayDays}d'),
+                label: 'Avg delay',
+                value: value.avgDelayDays == null
+                    ? '--'
+                    : '${value.avgDelayDays}d',
+              ),
             ),
           ],
         ),

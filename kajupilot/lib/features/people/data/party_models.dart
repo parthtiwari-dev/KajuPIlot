@@ -74,7 +74,7 @@ class PartyStats {
   const PartyStats({
     this.dealCount = 0,
     this.pendingAmountPaise = 0,
-    this.avgDelayDays = 0,
+    this.avgDelayDays,
     this.overdueAmountPaise = 0,
   });
 
@@ -86,14 +86,14 @@ class PartyStats {
     return PartyStats(
       dealCount: (json['dealCount'] as num?)?.toInt() ?? 0,
       pendingAmountPaise: decimalRupeesToPaise(json['pendingAmount']),
-      avgDelayDays: (json['avgDelayDays'] as num?)?.round() ?? 0,
+      avgDelayDays: (json['avgDelayDays'] as num?)?.round(),
       overdueAmountPaise: decimalRupeesToPaise(json['overdueAmount']),
     );
   }
 
   final int dealCount;
   final int pendingAmountPaise;
-  final int avgDelayDays;
+  final int? avgDelayDays;
   final int overdueAmountPaise;
 }
 
@@ -168,14 +168,18 @@ class UpdatePartyInput {
   const UpdatePartyInput({
     this.name,
     this.phone,
+    this.clearPhone = false,
     this.type,
     this.trustTag,
     this.notes,
+    this.clearNotes = false,
   });
 
   final String? name;
   final String? phone;
+  final bool clearPhone;
   final PartyTypeValue? type;
   final TrustTagValue? trustTag;
   final String? notes;
+  final bool clearNotes;
 }

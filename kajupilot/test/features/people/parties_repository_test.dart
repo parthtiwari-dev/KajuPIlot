@@ -118,6 +118,17 @@ void main() {
       expect(items, hasLength(1));
       expect(items.single.party.name, 'Supplier One');
     });
+
+    test('parses unknown average delay as null', () {
+      final stats = PartyStats.fromJson({
+        'dealCount': 1,
+        'pendingAmount': '0.00',
+        'avgDelayDays': null,
+        'overdueAmount': '0.00',
+      });
+
+      expect(stats.avgDelayDays, isNull);
+    });
   });
 }
 

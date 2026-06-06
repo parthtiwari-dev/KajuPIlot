@@ -62,13 +62,7 @@ class PartiesApi {
   Future<PartyListItem> update(String id, UpdatePartyInput input) async {
     final response = await _apiClient.put<Map<String, dynamic>>(
       '/parties/$id',
-      data: {
-        if (input.name != null) 'name': input.name,
-        if (input.phone != null) 'phone': input.phone,
-        if (input.type != null) 'type': input.type!.apiValue,
-        if (input.trustTag != null) 'trustTag': input.trustTag!.apiValue,
-        if (input.notes != null) 'notes': input.notes,
-      },
+      data: partyUpdatePayload(input),
     );
 
     return partyListItemFromResponse(response.data);
@@ -139,13 +133,22 @@ Map<String, Object?> partyCreatePayload({
 }
 
 Map<String, Object?> partyUpdatePayload(UpdatePartyInput input) {
-  return {
-    'name': input.name,
-    'phone': input.phone,
-    'type': input.type?.apiValue,
-    'trustTag': input.trustTag?.apiValue,
-    'notes': input.notes,
-  }..removeWhere((_, value) => value == null);
+  final payload = <String, Object?>{
+    if (input.name != null) 'name': input.name,
+    if (input.phone != null) 'phone': input.phone,
+    if (input.type != null) 'type': input.type!.apiValue,
+    if (input.trustTag != null) 'trustTag': input.trustTag!.apiValue,
+    if (input.notes != null) 'notes': input.notes,
+  };
+
+  if (input.clearPhone) {
+    payload['phone'] = null;
+  }
+  if (input.clearNotes) {
+    payload['notes'] = null;
+  }
+
+  return payload;
 }
 
 Map<String, Object?> partySyncPayload(Party party) {

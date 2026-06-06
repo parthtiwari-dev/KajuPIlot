@@ -131,14 +131,18 @@ class PartiesRepository {
     final now = DateTime.now().toUtc();
     final updated = existing.copyWith(
       name: input.name?.trim(),
-      phone: input.phone == null
-          ? const Value.absent()
-          : Value(_clean(input.phone)),
+      phone: input.clearPhone
+          ? const Value(null)
+          : input.phone == null
+              ? const Value.absent()
+              : Value(_clean(input.phone)),
       type: input.type?.apiValue,
       trustTag: input.trustTag?.apiValue,
-      notes: input.notes == null
-          ? const Value.absent()
-          : Value(_clean(input.notes)),
+      notes: input.clearNotes
+          ? const Value(null)
+          : input.notes == null
+              ? const Value.absent()
+              : Value(_clean(input.notes)),
       updatedAt: now,
     );
 
@@ -265,6 +269,8 @@ class PartiesRepository {
             final input = UpdatePartyInput(
               name: payload['name'] as String?,
               phone: payload['phone'] as String?,
+              clearPhone:
+                  payload.containsKey('phone') && payload['phone'] == null,
               type: payload['type'] == null
                   ? null
                   : PartyTypeValue.fromApi(payload['type'] as String),
@@ -272,6 +278,8 @@ class PartiesRepository {
                   ? null
                   : TrustTagValue.fromApi(payload['trustTag'] as String),
               notes: payload['notes'] as String?,
+              clearNotes:
+                  payload.containsKey('notes') && payload['notes'] == null,
             );
             await _tryUpdateOnApi(
               pendingId: entry.id,
@@ -305,52 +313,7 @@ class PartiesRepository {
           }))
         .get();
 
-    var receivable = 0;
-    var payable = 0;
-    var overdueReceivable = 0;
-    var overduePayable = 0;
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
-
-    for (final deal in deals) {
-      final remaining = deal.totalPaise - deal.paidPaise;
-      if (remaining <= 0) {
-        continue;
-      }
-
-      if (deal.type == PartyDealType.sale.apiValue) {
-        receivable += remaining;
-      } else {
-        payable += remaining;
-      }
-
-      final due = deal.paymentDue;
-      if (due != null && due.isBefore(todayOnly)) {
-        if (deal.type == PartyDealType.sale.apiValue) {
-          overdueReceivable += remaining;
-        } else {
-          overduePayable += remaining;
-        }
-      }
-    }
-
-    for (final payment in payments) {
-      if (payment.type == 'RECEIVED') {
-        receivable = _clampPositive(receivable - payment.amountPaise);
-        overdueReceivable =
-            _clampPositive(overdueReceivable - payment.amountPaise);
-      } else {
-        payable = _clampPositive(payable - payment.amountPaise);
-        overduePayable = _clampPositive(overduePayable - payment.amountPaise);
-      }
-    }
-
-    return PartyStats(
-      dealCount: deals.length,
-      pendingAmountPaise: receivable - payable,
-      overdueAmountPaise: overdueReceivable + overduePayable,
-      avgDelayDays: 0,
-    );
+    return _computeStats(deals, payments);
   }
 
   Future<PartyLedger> ledger(String partyId) async {
@@ -426,12 +389,23 @@ class PartiesRepository {
     PartyListQuery query,
   ) async {
     final normalizedSearch = query.search.trim().toLowerCase();
+    final allDeals = await (_database.select(_database.deals)
+          ..where((row) => row.deletedAt.isNull()))
+        .get();
+    final allPayments = await (_database.select(_database.payments)
+          ..where((row) => row.dealId.isNull() & row.deletedAt.isNull()))
+        .get();
+    final dealsByParty = _groupDealsByParty(allDeals);
+    final paymentsByParty = _groupPaymentsByParty(allPayments);
     final items = <PartyListItem>[];
 
     for (final party in parties) {
       final item = PartyListItem(
         party: party,
-        stats: await statsForParty(party.id),
+        stats: _computeStats(
+          dealsByParty[party.id] ?? const [],
+          paymentsByParty[party.id] ?? const [],
+        ),
       );
 
       if (!_matchesSearch(item, normalizedSearch) ||
@@ -443,6 +417,70 @@ class PartiesRepository {
     }
 
     return items;
+  }
+
+  PartyStats _computeStats(List<Deal> deals, List<Payment> payments) {
+    var receivable = 0;
+    var payable = 0;
+    var overdueReceivable = 0;
+    var overduePayable = 0;
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+
+    for (final deal in deals) {
+      final remaining = deal.totalPaise - deal.paidPaise;
+      if (remaining <= 0) {
+        continue;
+      }
+
+      if (deal.type == PartyDealType.sale.apiValue) {
+        receivable += remaining;
+      } else {
+        payable += remaining;
+      }
+
+      final due = deal.paymentDue;
+      if (due != null && due.isBefore(todayOnly)) {
+        if (deal.type == PartyDealType.sale.apiValue) {
+          overdueReceivable += remaining;
+        } else {
+          overduePayable += remaining;
+        }
+      }
+    }
+
+    for (final payment in payments) {
+      if (payment.type == 'RECEIVED') {
+        receivable = _clampPositive(receivable - payment.amountPaise);
+        overdueReceivable =
+            _clampPositive(overdueReceivable - payment.amountPaise);
+      } else {
+        payable = _clampPositive(payable - payment.amountPaise);
+        overduePayable = _clampPositive(overduePayable - payment.amountPaise);
+      }
+    }
+
+    return PartyStats(
+      dealCount: deals.length,
+      pendingAmountPaise: receivable - payable,
+      overdueAmountPaise: overdueReceivable + overduePayable,
+    );
+  }
+
+  Map<String, List<Deal>> _groupDealsByParty(List<Deal> deals) {
+    final grouped = <String, List<Deal>>{};
+    for (final deal in deals) {
+      (grouped[deal.partyId] ??= []).add(deal);
+    }
+    return grouped;
+  }
+
+  Map<String, List<Payment>> _groupPaymentsByParty(List<Payment> payments) {
+    final grouped = <String, List<Payment>>{};
+    for (final payment in payments) {
+      (grouped[payment.partyId] ??= []).add(payment);
+    }
+    return grouped;
   }
 
   bool _matchesSearch(PartyListItem item, String search) {

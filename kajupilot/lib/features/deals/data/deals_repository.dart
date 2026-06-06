@@ -56,7 +56,17 @@ class DealsRepository {
 
   Stream<List<DealListItem>> watchDeals(DealListQuery query) {
     return (_database.select(_database.deals)
-          ..where((row) => row.deletedAt.isNull())
+          ..where((row) {
+            var expression = row.deletedAt.isNull();
+            if (query.partyId != null) {
+              expression = expression & row.partyId.equals(query.partyId!);
+            }
+            if (query.filter.status != null) {
+              expression =
+                  expression & row.status.equals(query.filter.status!.apiValue);
+            }
+            return expression;
+          })
           ..orderBy([
             (row) => OrderingTerm.desc(row.updatedAt),
             (row) => OrderingTerm.desc(row.createdAt),
@@ -167,15 +177,21 @@ class DealsRepository {
       ratePaisePerKg: lineInputs == null ? null : 0,
       totalPaise: input.totalPaise,
       paidPaise: input.paidPaise,
-      deliveryDate: input.deliveryDate == null
-          ? const Value.absent()
-          : Value(input.deliveryDate!.toUtc()),
-      paymentDue: input.paymentDue == null
-          ? const Value.absent()
-          : Value(input.paymentDue!.toUtc()),
-      notes: input.notes == null
-          ? const Value.absent()
-          : Value(_clean(input.notes)),
+      deliveryDate: input.clearDeliveryDate
+          ? const Value(null)
+          : input.deliveryDate == null
+              ? const Value.absent()
+              : Value(input.deliveryDate!.toUtc()),
+      paymentDue: input.clearPaymentDue
+          ? const Value(null)
+          : input.paymentDue == null
+              ? const Value.absent()
+              : Value(input.paymentDue!.toUtc()),
+      notes: input.clearNotes
+          ? const Value(null)
+          : input.notes == null
+              ? const Value.absent()
+              : Value(_clean(input.notes)),
       updatedAt: now,
     );
 
@@ -194,8 +210,11 @@ class DealsRepository {
       totalPaise: input.totalPaise,
       paidPaise: input.paidPaise,
       deliveryDate: input.deliveryDate,
+      clearDeliveryDate: input.clearDeliveryDate,
       paymentDue: input.paymentDue,
+      clearPaymentDue: input.clearPaymentDue,
       notes: input.notes,
+      clearNotes: input.clearNotes,
     );
     final pendingId = await _pendingSync.enqueue(
       entityType: PendingSyncEntityType.deal,
@@ -662,8 +681,13 @@ class DealsRepository {
           ? null
           : decimalRupeesToPaise(payload['paidAmount']),
       deliveryDate: _dateFromPayload(payload['deliveryDate']),
+      clearDeliveryDate: payload.containsKey('deliveryDate') &&
+          payload['deliveryDate'] == null,
       paymentDue: _dateFromPayload(payload['paymentDue']),
+      clearPaymentDue:
+          payload.containsKey('paymentDue') && payload['paymentDue'] == null,
       notes: payload['notes'] as String?,
+      clearNotes: payload.containsKey('notes') && payload['notes'] == null,
     );
   }
 

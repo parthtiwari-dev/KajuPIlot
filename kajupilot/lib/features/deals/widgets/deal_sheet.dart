@@ -268,6 +268,35 @@ class _DealSheetState extends ConsumerState<DealSheet> {
                       ),
                     ],
                   ),
+                  if (_deliveryDate != null || _paymentDue != null) ...[
+                    const SizedBox(height: KajuSpacing.xs),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Wrap(
+                        spacing: KajuSpacing.sm,
+                        children: [
+                          if (_deliveryDate != null)
+                            TextButton.icon(
+                              key: const Key('deal-clear-delivery-date-button'),
+                              onPressed: () {
+                                setState(() => _deliveryDate = null);
+                              },
+                              icon: const Icon(Icons.close, size: 16),
+                              label: const Text('Clear delivery'),
+                            ),
+                          if (_paymentDue != null)
+                            TextButton.icon(
+                              key: const Key('deal-clear-payment-due-button'),
+                              onPressed: () {
+                                setState(() => _paymentDue = null);
+                              },
+                              icon: const Icon(Icons.close, size: 16),
+                              label: const Text('Clear due'),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: KajuSpacing.md),
                   TextFormField(
                     key: const Key('deal-notes-field'),
@@ -330,6 +359,7 @@ class _DealSheetState extends ConsumerState<DealSheet> {
     try {
       final partyId = await _resolvePartyId();
       final lines = _lineInputs();
+      final existingDeal = widget.item?.deal;
 
       if (_isEdit) {
         await repository.update(
@@ -341,7 +371,11 @@ class _DealSheetState extends ConsumerState<DealSheet> {
             totalPaise: _totalPaise,
             paidPaise: _paidPaise,
             deliveryDate: _deliveryDate,
+            clearDeliveryDate:
+                existingDeal?.deliveryDate != null && _deliveryDate == null,
             paymentDue: _paymentDue,
+            clearPaymentDue:
+                existingDeal?.paymentDue != null && _paymentDue == null,
             notes: _notesController.text,
           ),
         );

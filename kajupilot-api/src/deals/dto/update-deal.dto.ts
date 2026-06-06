@@ -42,14 +42,14 @@ export class UpdateDealDto {
 
   @IsOptional()
   @IsISO8601()
-  deliveryDate?: string;
+  deliveryDate?: string | null;
 
   @IsOptional()
   @IsISO8601()
-  paymentDue?: string;
+  paymentDue?: string | null;
 
   @IsOptional()
   @IsString()
   @MaxLength(1000)
-  notes?: string;
+  notes?: string | null;
 }

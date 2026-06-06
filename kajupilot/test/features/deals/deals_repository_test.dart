@@ -130,6 +130,42 @@ void main() {
       expect(pending.map((entry) => entry.action), contains('delete'));
     });
 
+    test('clears nullable deal fields locally and in pending payload',
+        () async {
+      api.failUpdate = true;
+      await seedDeal(database);
+      final delivery = DateTime.utc(2026, 6, 10);
+      final due = DateTime.utc(2026, 6, 12);
+      await (database.update(database.deals)
+            ..where((row) => row.id.equals('deal-1')))
+          .write(
+        DealsCompanion(
+          deliveryDate: Value(delivery),
+          paymentDue: Value(due),
+          notes: const Value('Remove me'),
+        ),
+      );
+
+      await repository.update(
+        'deal-1',
+        const UpdateDealInput(
+          clearDeliveryDate: true,
+          clearPaymentDue: true,
+          clearNotes: true,
+        ),
+      );
+
+      final deal = await database.select(database.deals).getSingle();
+      final pending = await database.select(database.pendingSync).getSingle();
+
+      expect(deal.deliveryDate, isNull);
+      expect(deal.paymentDue, isNull);
+      expect(deal.notes, isNull);
+      expect(pending.payloadJson, contains('"deliveryDate":null'));
+      expect(pending.payloadJson, contains('"paymentDue":null'));
+      expect(pending.payloadJson, contains('"notes":null'));
+    });
+
     test('queues status updates through pending sync', () async {
       api.failStatus = true;
       await seedDeal(database);

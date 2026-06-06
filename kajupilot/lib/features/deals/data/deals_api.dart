@@ -148,20 +148,33 @@ Map<String, Object?> dealCreatePayload({
 }
 
 Map<String, Object?> dealUpdatePayload(UpdateDealInput input) {
-  return {
-    'partyId': input.partyId,
-    'type': input.type?.apiValue,
-    'items': input.items?.map(dealLinePayload).toList(),
-    'totalAmount': input.totalPaise == null
-        ? null
-        : paiseToDecimalRupeesString(input.totalPaise!),
-    'paidAmount': input.paidPaise == null
-        ? null
-        : paiseToDecimalRupeesString(input.paidPaise!),
-    'deliveryDate': input.deliveryDate?.toUtc().toIso8601String(),
-    'paymentDue': input.paymentDue?.toUtc().toIso8601String(),
-    'notes': input.notes,
-  }..removeWhere((_, value) => value == null);
+  final payload = <String, Object?>{
+    if (input.partyId != null) 'partyId': input.partyId,
+    if (input.type != null) 'type': input.type!.apiValue,
+    if (input.items != null)
+      'items': input.items!.map(dealLinePayload).toList(),
+    if (input.totalPaise != null)
+      'totalAmount': paiseToDecimalRupeesString(input.totalPaise!),
+    if (input.paidPaise != null)
+      'paidAmount': paiseToDecimalRupeesString(input.paidPaise!),
+    if (input.deliveryDate != null)
+      'deliveryDate': input.deliveryDate!.toUtc().toIso8601String(),
+    if (input.paymentDue != null)
+      'paymentDue': input.paymentDue!.toUtc().toIso8601String(),
+    if (input.notes != null) 'notes': input.notes,
+  };
+
+  if (input.clearDeliveryDate) {
+    payload['deliveryDate'] = null;
+  }
+  if (input.clearPaymentDue) {
+    payload['paymentDue'] = null;
+  }
+  if (input.clearNotes) {
+    payload['notes'] = null;
+  }
+
+  return payload;
 }
 
 Map<String, Object?> dealLinePayload(DealLineInput input) {

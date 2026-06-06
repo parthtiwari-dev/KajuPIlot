@@ -393,23 +393,21 @@ class PaymentsRepository {
           ..where((row) => row.deletedAt.isNull())
           ..orderBy([(row) => OrderingTerm.asc(row.name)]))
         .get();
+    final allDeals = await (_database.select(_database.deals)
+          ..where((row) => row.deletedAt.isNull()))
+        .get();
+    final allPayments = await (_database.select(_database.payments)
+          ..where((row) => row.dealId.isNull() & row.deletedAt.isNull()))
+        .get();
+    final dealsByParty = _groupDealsByParty(allDeals);
+    final paymentsByParty = _groupPaymentsByParty(allPayments);
     final rows = <MoneyLedgerParty>[];
     var totalReceivable = 0;
     var totalPayable = 0;
 
     for (final party in parties) {
-      final deals = await (_database.select(_database.deals)
-            ..where((row) {
-              return row.partyId.equals(party.id) & row.deletedAt.isNull();
-            }))
-          .get();
-      final payments = await (_database.select(_database.payments)
-            ..where((row) {
-              return row.partyId.equals(party.id) &
-                  row.dealId.isNull() &
-                  row.deletedAt.isNull();
-            }))
-          .get();
+      final deals = dealsByParty[party.id] ?? const <Deal>[];
+      final payments = paymentsByParty[party.id] ?? const <Payment>[];
       final totals = _computePartyLedger(deals, payments);
       if (totals.receivablePaise == 0 &&
           totals.payablePaise == 0 &&
@@ -531,7 +529,7 @@ class PaymentsRepository {
     final deal = item.deal;
     if (deal != null && deal.id.isNotEmpty) {
       await (_database.update(_database.deals)
-            ..where((row) => row.id.equals(deal.id)))
+            ..where((row) => row.id.equals(deal.id) & row.deletedAt.isNull()))
           .write(
         DealsCompanion(
           paidPaise: Value(deal.paidPaise),
@@ -539,6 +537,22 @@ class PaymentsRepository {
         ),
       );
     }
+  }
+
+  Map<String, List<Deal>> _groupDealsByParty(List<Deal> deals) {
+    final grouped = <String, List<Deal>>{};
+    for (final deal in deals) {
+      (grouped[deal.partyId] ??= []).add(deal);
+    }
+    return grouped;
+  }
+
+  Map<String, List<Payment>> _groupPaymentsByParty(List<Payment> payments) {
+    final grouped = <String, List<Payment>>{};
+    for (final payment in payments) {
+      (grouped[payment.partyId] ??= []).add(payment);
+    }
+    return grouped;
   }
 
   Future<void> _upsertPayment(Payment payment) {
@@ -574,7 +588,7 @@ class PaymentsRepository {
     }
 
     await (_database.update(_database.deals)
-          ..where((row) => row.id.equals(deal.id)))
+          ..where((row) => row.id.equals(deal.id) & row.deletedAt.isNull()))
         .write(
       DealsCompanion(
         paidPaise: Value(nextPaid),
@@ -585,7 +599,9 @@ class PaymentsRepository {
 
   Future<void> _reverseLinkedPaymentLocal(Payment payment) async {
     final deal = await (_database.select(_database.deals)
-          ..where((row) => row.id.equals(payment.dealId!)))
+          ..where(
+            (row) => row.id.equals(payment.dealId!) & row.deletedAt.isNull(),
+          ))
         .getSingleOrNull();
     if (deal == null) {
       return;
@@ -593,7 +609,7 @@ class PaymentsRepository {
 
     final nextPaid = _clampPositive(deal.paidPaise - payment.amountPaise);
     await (_database.update(_database.deals)
-          ..where((row) => row.id.equals(deal.id)))
+          ..where((row) => row.id.equals(deal.id) & row.deletedAt.isNull()))
         .write(
       DealsCompanion(
         paidPaise: Value(nextPaid),

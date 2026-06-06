@@ -82,7 +82,7 @@ describe("PartiesService", () => {
       stats: {
         dealCount: 0,
         pendingAmount: "0.00",
-        avgDelayDays: 0,
+        avgDelayDays: null,
         overdueAmount: "0.00",
       },
     });
