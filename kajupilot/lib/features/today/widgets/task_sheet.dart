@@ -177,16 +177,20 @@ class _TaskSheetState extends ConsumerState<TaskSheet> {
                       ],
                     ),
                     const SizedBox(height: KajuSpacing.lg),
-                    FilledButton.icon(
-                      onPressed: _saving ? null : _save,
-                      icon: _saving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.check_outlined),
-                      label: const Text('Save task'),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: _saving ? null : _save,
+                        icon: _saving
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.check_outlined),
+                        label: const Text('Save task'),
+                      ),
                     ),
                   ],
                 ),

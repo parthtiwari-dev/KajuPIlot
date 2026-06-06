@@ -103,16 +103,19 @@ class _OutcomeSheetState extends ConsumerState<OutcomeSheet> {
                 decoration: const InputDecoration(labelText: 'Add note'),
               ),
               const SizedBox(height: KajuSpacing.lg),
-              FilledButton.icon(
-                onPressed: _saving ? null : _save,
-                icon: _saving
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.check_outlined),
-                label: const Text('Save outcome'),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _saving ? null : _save,
+                  icon: _saving
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.check_outlined),
+                  label: const Text('Save outcome'),
+                ),
               ),
             ],
           ),

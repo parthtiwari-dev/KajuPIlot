@@ -306,10 +306,13 @@ class _DealSheetState extends ConsumerState<DealSheet> {
                     decoration: const InputDecoration(labelText: 'Notes'),
                   ),
                   const SizedBox(height: KajuSpacing.lg),
-                  FilledButton(
-                    key: const Key('deal-save-button'),
-                    onPressed: _isSaving ? null : _save,
-                    child: Text(_isSaving ? 'Saving...' : 'Save deal'),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      key: const Key('deal-save-button'),
+                      onPressed: _isSaving ? null : _save,
+                      child: Text(_isSaving ? 'Saving...' : 'Save deal'),
+                    ),
                   ),
                 ],
               ),

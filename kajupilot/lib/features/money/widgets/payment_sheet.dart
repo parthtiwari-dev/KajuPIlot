@@ -222,10 +222,13 @@ class _PaymentSheetState extends ConsumerState<PaymentSheet> {
                     decoration: const InputDecoration(labelText: 'Notes'),
                   ),
                   const SizedBox(height: KajuSpacing.lg),
-                  FilledButton(
-                    key: const Key('payment-save-button'),
-                    onPressed: _isSaving ? null : _save,
-                    child: Text(_isSaving ? 'Saving...' : 'Save payment'),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      key: const Key('payment-save-button'),
+                      onPressed: _isSaving ? null : _save,
+                      child: Text(_isSaving ? 'Saving...' : 'Save payment'),
+                    ),
                   ),
                 ],
               ),

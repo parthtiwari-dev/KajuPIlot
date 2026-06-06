@@ -48,10 +48,13 @@ class _PostponeSheetState extends State<PostponeSheet> {
               label: Text(_dateTimeLabel(_scheduledAt)),
             ),
             const SizedBox(height: KajuSpacing.lg),
-            FilledButton.icon(
-              onPressed: () => Navigator.of(context).pop(_scheduledAt),
-              icon: const Icon(Icons.schedule_outlined),
-              label: const Text('Postpone'),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => Navigator.of(context).pop(_scheduledAt),
+                icon: const Icon(Icons.schedule_outlined),
+                label: const Text('Postpone'),
+              ),
             ),
           ],
         ),

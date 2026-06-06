@@ -151,10 +151,13 @@ class _PersonSheetState extends ConsumerState<PersonSheet> {
                     decoration: const InputDecoration(labelText: 'Notes'),
                   ),
                   const SizedBox(height: KajuSpacing.lg),
-                  FilledButton(
-                    key: const Key('person-save-button'),
-                    onPressed: _isSaving ? null : _save,
-                    child: Text(_isSaving ? 'Saving...' : 'Save'),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      key: const Key('person-save-button'),
+                      onPressed: _isSaving ? null : _save,
+                      child: Text(_isSaving ? 'Saving...' : 'Save'),
+                    ),
                   ),
                 ],
               ),

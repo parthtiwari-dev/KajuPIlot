@@ -113,7 +113,10 @@ class TaskCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: KajuSpacing.md),
-                    Row(
+                    Wrap(
+                      spacing: KajuSpacing.sm,
+                      runSpacing: KajuSpacing.sm,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         if (item.type == TaskTypeValue.call)
                           FilledButton.icon(
@@ -121,14 +124,11 @@ class TaskCard extends StatelessWidget {
                             icon: const Icon(Icons.call_outlined, size: 18),
                             label: const Text('Call'),
                           ),
-                        if (item.type == TaskTypeValue.call)
-                          const SizedBox(width: KajuSpacing.sm),
                         OutlinedButton.icon(
                           onPressed: onDone,
                           icon: const Icon(Icons.check_outlined, size: 18),
                           label: const Text('Done'),
                         ),
-                        const SizedBox(width: KajuSpacing.sm),
                         IconButton.outlined(
                           onPressed: onPostpone,
                           icon: const Icon(Icons.schedule_outlined),

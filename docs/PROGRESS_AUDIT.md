@@ -459,9 +459,9 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | `flutter pub run build_runner build --delete-conflicting-outputs` | Pass |
 | `dart.bat format lib test` | Pass |
 | `flutter.bat analyze` | Pass |
-| `flutter.bat test` | Pass, 45 Flutter tests |
+| `flutter.bat test` | Pass, 46 Flutter tests |
 | `flutter.bat test test/features/money` | Pass, 5 Money repository tests |
-| `flutter.bat test test\features\today` | Pass, 3 Today repository tests |
+| `flutter.bat test test\features\today` | Pass, 4 Today tests |
 | `flutter.bat build apk --debug` | Pass |
 | `npm.cmd run build` in API | Pass |
 | `npm.cmd run format` in API | Pass |
@@ -524,6 +524,7 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | Tasks and call logs existed only as schema | Added protected APIs, Flutter repositories, sync retry, and UI |
 | Call outcome retries could duplicate follow-up tasks | Made call-log `syncId` idempotent and accepted client-generated follow-up task IDs |
 | Notification summaries used `Rs` text | Switched user-facing notification money text to `₹` |
+| Today task card crashed on phone with infinite button width | Reworked filled button theme constraints and made task actions wrap on narrow screens |
 
 ## Upgrade Notes
 

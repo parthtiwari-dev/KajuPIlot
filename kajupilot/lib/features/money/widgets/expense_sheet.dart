@@ -189,10 +189,13 @@ class _ExpenseSheetState extends ConsumerState<ExpenseSheet> {
                     decoration: const InputDecoration(labelText: 'Notes'),
                   ),
                   const SizedBox(height: KajuSpacing.lg),
-                  FilledButton(
-                    key: const Key('expense-save-button'),
-                    onPressed: _isSaving ? null : _save,
-                    child: Text(_isSaving ? 'Saving...' : 'Save expense'),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      key: const Key('expense-save-button'),
+                      onPressed: _isSaving ? null : _save,
+                      child: Text(_isSaving ? 'Saving...' : 'Save expense'),
+                    ),
                   ),
                 ],
               ),
