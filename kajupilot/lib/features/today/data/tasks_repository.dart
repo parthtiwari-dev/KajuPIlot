@@ -389,9 +389,27 @@ class TasksRepository {
 
   Future<void> rescheduleNotificationsForToday() async {
     final today = DateTime.now();
-    final tasks = await localToday(today);
+    final tasks = await _localPendingReminderTasks(today);
     final insights = await todayInsights(today);
     await _notifications.reschedule(tasks: tasks, insights: insights);
+  }
+
+  Future<List<TaskListItem>> _localPendingReminderTasks(DateTime now) async {
+    final tasks = await (_database.select(_database.tasks)
+          ..where((row) {
+            return row.deletedAt.isNull() &
+                row.scheduledAt.isBiggerThanValue(now.toUtc()) &
+                row.status.isIn([
+                  TaskStatusValue.pending.apiValue,
+                  TaskStatusValue.postponed.apiValue,
+                ]);
+          })
+          ..orderBy([
+            (row) => OrderingTerm.asc(row.scheduledAt),
+            (row) => OrderingTerm.desc(row.priority),
+          ]))
+        .get();
+    return _toListItems(tasks);
   }
 
   Future<void> flushPendingTaskSync() async {

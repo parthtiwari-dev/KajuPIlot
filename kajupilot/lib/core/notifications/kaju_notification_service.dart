@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -35,6 +36,10 @@ class KajuNotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestExactAlarmsPermission();
 
     _initialized = true;
   }
@@ -55,14 +60,15 @@ class KajuNotificationService {
     }).toList();
 
     for (final item in pendingTasks) {
-      await _plugin.zonedSchedule(
-        _taskNotificationId(item.task.id),
-        'KajuPilot: ${item.type.label}',
-        item.party == null
+      await _scheduleNotification(
+        id: _taskNotificationId(item.task.id),
+        title: 'KajuPilot: ${item.type.label}',
+        body: item.party == null
             ? item.task.title
             : '${item.party!.name}: ${item.task.title}',
-        tz.TZDateTime.from(item.task.scheduledAt.toLocal(), tz.local),
-        const NotificationDetails(
+        scheduledAt:
+            tz.TZDateTime.from(item.task.scheduledAt.toLocal(), tz.local),
+        details: const NotificationDetails(
           android: AndroidNotificationDetails(
             'kajupilot_tasks',
             'Task reminders',
@@ -71,7 +77,7 @@ class KajuNotificationService {
             priority: Priority.high,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        preferExact: true,
       );
     }
 
@@ -91,12 +97,13 @@ class KajuNotificationService {
       target = target.add(const Duration(days: 1));
     }
 
-    await _plugin.zonedSchedule(
-      80001,
-      'KajuPilot morning plan',
-      '${insights.callsDue} calls today, ${_formatCompactRupees(insights.pendingCollectionPaise)} to collect',
-      tz.TZDateTime.from(target, tz.local),
-      const NotificationDetails(
+    await _scheduleNotification(
+      id: 80001,
+      title: 'KajuPilot morning plan',
+      body:
+          '${insights.callsDue} calls today, ${_formatCompactRupees(insights.pendingCollectionPaise)} to collect',
+      scheduledAt: tz.TZDateTime.from(target, tz.local),
+      details: const NotificationDetails(
         android: AndroidNotificationDetails(
           'kajupilot_summary',
           'Morning summary',
@@ -105,7 +112,7 @@ class KajuNotificationService {
           priority: Priority.defaultPriority,
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      preferExact: false,
     );
   }
 
@@ -126,12 +133,12 @@ class KajuNotificationService {
       return;
     }
 
-    await _plugin.zonedSchedule(
-      80002,
-      'KajuPilot nudge',
-      '$pendingCount pending items still need attention today',
-      tz.TZDateTime.from(target, tz.local),
-      const NotificationDetails(
+    await _scheduleNotification(
+      id: 80002,
+      title: 'KajuPilot nudge',
+      body: '$pendingCount pending items still need attention today',
+      scheduledAt: tz.TZDateTime.from(target, tz.local),
+      details: const NotificationDetails(
         android: AndroidNotificationDetails(
           'kajupilot_nudges',
           'Workday nudges',
@@ -140,8 +147,44 @@ class KajuNotificationService {
           priority: Priority.defaultPriority,
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      preferExact: false,
     );
+  }
+
+  Future<void> _scheduleNotification({
+    required int id,
+    required String title,
+    required String body,
+    required tz.TZDateTime scheduledAt,
+    required NotificationDetails details,
+    required bool preferExact,
+  }) async {
+    final mode = preferExact
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
+    try {
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduledAt,
+        details,
+        androidScheduleMode: mode,
+      );
+    } on PlatformException catch (error) {
+      if (preferExact && error.code == 'exact_alarms_not_permitted') {
+        await _plugin.zonedSchedule(
+          id,
+          title,
+          body,
+          scheduledAt,
+          details,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        );
+        return;
+      }
+      rethrow;
+    }
   }
 
   int _taskNotificationId(String id) {
