@@ -8,5 +8,6 @@ import { PartiesService } from "./parties.service";
   imports: [AuthModule, PrismaModule],
   controllers: [PartiesController],
   providers: [PartiesService],
+  exports: [PartiesService],
 })
 export class PartiesModule {}

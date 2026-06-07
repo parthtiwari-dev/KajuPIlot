@@ -2,7 +2,7 @@
 
 Date: 2026-06-07
 Branch: `main`
-Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications implemented and verified; ready for IQOO smoke
+Status: Phase 3 AI parser, confirmation engine, ParseSheet, and accuracy tests implemented and verified; ready for IQOO AI provider smoke
 
 ## Branch And Repo
 
@@ -294,6 +294,36 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | Keep AI parsing out | Done |
 | Keep Reports/Admin out | Done |
 
+## Phase 3 Checklist
+
+| Task | Result |
+|---|---|
+| Add protected AI parse endpoint | Done, `POST /api/v1/ai/parse` |
+| Use existing AI provider switch | Done, `AI_PROVIDER=openai` or `AI_PROVIDER=groq` drives parsing |
+| Keep OpenAI default model | Done, default remains `gpt-4o-mini` |
+| Keep Groq switchable | Done, Groq remains available through env |
+| Add parser prompt for real app model | Done, supports bucket-wise deal items, multiple grades, expenses, tasks, payments, and Indian trader language |
+| Return normalized preview contract | Done, grouped `tasks`, `deals`, `payments`, and `expenses` with integer paise |
+| Add item review metadata | Done, each preview item has `tempId`, `needsReview`, `warnings`, and party match data |
+| Parse defensive JSON | Done, invalid provider output returns `parse_failed` and logs the error |
+| Add parse rate limit | Done, default `20` parse calls/hour/user via `AI_PARSE_RATE_LIMIT_PER_HOUR` |
+| Extend AI parse audit log | Done, provider/model/usage/error/confirmed result fields added |
+| Add protected AI confirm endpoint | Done, `POST /api/v1/ai/parse/:logId/confirm` |
+| Reject unresolved preview items | Done, confirm refuses items still marked `needsReview` |
+| Add server-side fuzzy party matching | Done, exact, unique prefix/first-name, and unambiguous Levenshtein matching |
+| Auto-create missing parties | Done, inferred as Customer, Supplier, or Both from parsed actions |
+| Create records only after confirmation | Done, Tasks, Deals, DealItems, Payments, Expenses, and needed Parties |
+| Avoid AI update/delete | Done, Phase 3 creates only new records |
+| Make confirm retry idempotent | Done, confirmed result is returned without duplicate creates |
+| Replace universal input placeholder | Done, opens real `ParseSheet` |
+| Add parse UI states | Done, input/manual shortcuts/loading/preview/error states |
+| Add preview edit/remove actions | Done, inline editors per item type |
+| Disable Confirm All until valid | Done |
+| Add manual shortcut fallback | Done, opens existing Sale/Purchase, Payment, Expense, and Call Task sheets |
+| Refresh app data after confirm | Done, refreshes Today, People, Deals, and Money repositories/providers |
+| Add parser accuracy tests | Done, backend fake-provider and Flutter ParseSheet coverage added |
+| Keep roadmap doc untouched | Done |
+
 ## Phase 0 App Shell Lock
 
 | Task | Result |
@@ -306,7 +336,7 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | Deals tab | Real local-first deals list added |
 | People tab | Real local-first People screen added in Phase 1B |
 | More tab | Placeholder screen added |
-| Universal input | Visible above bottom navigation and opens a non-parsing bottom sheet |
+| Universal input | Visible above bottom navigation and opens real Phase 3 ParseSheet |
 | Android network access | `INTERNET` permission added |
 | Android notifications | `POST_NOTIFICATIONS` permission added |
 
@@ -375,7 +405,7 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | Shared generation gateway | Added `AiService` |
 | Provider config service | Added `AiConfigService` |
 | Secret exposure | API keys are not returned by the config endpoint |
-| AI parsing | Still intentionally not implemented |
+| AI parsing | Implemented in Phase 3 through parse/confirm endpoints and Flutter ParseSheet |
 
 ## Phase 0 Admin/Docker Foundation
 
@@ -390,7 +420,7 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | Caddy routing | API and admin hostnames configured through env vars |
 | Runtime Prisma CLI | `prisma` kept available so container migration deploy can run |
 | Local Docker start | Done, dev stack rebuilt and restarted |
-| Physical-device backend smoke | Pending Phase 2 IQOO smoke |
+| Physical-device backend smoke | Prior IQOO app smoke passed; Phase 3 AI provider smoke pending |
 
 ## Current Stack
 
@@ -459,14 +489,16 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | `flutter pub run build_runner build --delete-conflicting-outputs` | Pass |
 | `dart.bat format lib test` | Pass |
 | `flutter.bat analyze` | Pass |
-| `flutter.bat test` | Pass, 46 Flutter tests |
+| `flutter.bat test` | Pass, 51 Flutter tests |
 | `flutter.bat test test/features/money` | Pass, 5 Money repository tests |
 | `flutter.bat test test\features\today` | Pass, 4 Today tests |
+| `flutter.bat test test\features\input` | Pass, 5 AI parser/input tests |
 | `flutter.bat build apk --debug` | Pass |
 | `npm.cmd run build` in API | Pass |
 | `npm.cmd run format` in API | Pass |
-| `npm.cmd test` in API | Pass, 13 suites / 58 tests |
+| `npm.cmd test` in API | Pass, 14 suites / 65 tests |
 | Phase 2 targeted backend specs | Pass, 9 Tasks/Call Logs/Insights tests |
+| Phase 3 targeted backend specs | Pass, 7 AI parser tests |
 | `npm.cmd audit` in API | Pass, 0 vulnerabilities |
 | Prisma validate with `DATABASE_URL` | Pass |
 | `npm.cmd run build` in admin | Pass |
@@ -484,7 +516,7 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | Authenticated personal expense smoke | Pass, `scope=PERSONAL` create and scoped summary returned successfully |
 | Android contact picker bridge compile | Pass through debug APK build |
 | Manual APK install/run | Pass, user confirmed IQOO opens app UI |
-| Manual setup flow against live backend | Pending Phase 2 IQOO smoke |
+| Manual setup flow against live backend | Prior IQOO app smoke passed; Phase 3 AI provider smoke pending |
 
 ## Issues Found And Resolved
 
@@ -525,6 +557,11 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | Call outcome retries could duplicate follow-up tasks | Made call-log `syncId` idempotent and accepted client-generated follow-up task IDs |
 | Notification summaries used `Rs` text | Switched user-facing notification money text to `₹` |
 | Today task card crashed on phone with infinite button width | Reworked filled button theme constraints and made task actions wrap on narrow screens |
+| Universal input was still a placeholder | Replaced it with real ParseSheet parse/preview/edit/confirm flow |
+| AI parser roadmap wording still assumed kg/rate deals | Updated parser prompt and contract to use bucket-wise `DealItem` rows and manual totals |
+| New-contact warning could block useful AI confirms | Treated clear new-contact creation as a non-blocking warning; ambiguous or missing required fields still block |
+| AI confirm retries could duplicate business records | Added deterministic sync IDs plus stored confirmed result idempotency |
+| Provider output can be malformed | Added defensive JSON parsing, server validation, and `parse_failed` logging |
 
 ## Upgrade Notes
 
@@ -536,7 +573,7 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | Backend | NestJS 11 used for current supported package line |
 | Admin | Next.js 15 used instead of roadmap Next 14 because audit health is cleaner |
 | Docker | Compose file is production-oriented; a dev override may be useful later |
-| AI | OpenAI and Groq SDKs installed; one provider switch added; AI parsing intentionally not implemented yet |
+| AI | OpenAI and Groq SDKs installed; one provider switch drives parser calls; strict JSON prompt plus server validation used instead of provider-specific JSON mode |
 
 ## Known Risks
 
@@ -548,10 +585,12 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | Manual setup smoke not yet fully completed | Enter setup code on IQOO, confirm token storage, relaunch into shell |
 | Flutter debug service can disconnect on phone | App still installs/runs; rerun `make run` after reconnecting if hot reload is needed |
 | Admin dashboard is placeholder-only | Keep until backend/admin roadmap phases |
-| Phase 2 physical phone smoke is pending | Rebuild/restart Docker, run the app, and test Today tasks, call outcomes, and notifications on IQOO |
+| Phase 3 physical phone smoke is pending | Rebuild/restart Docker, run the app, and test universal input parse/confirm on IQOO |
 | Android notification permission depends on user approval | Allow notifications on the first run when prompted |
 | Dialer return behavior can vary by Android device | After tapping Call, return to the app and save the outcome sheet |
-| AI parsing not implemented | Start only after manual CRUD flows exist |
+| Live AI provider smoke is pending | Test Phase 3 once with OpenAI and once with Groq after valid keys/rate limits are available |
+| AI parsing is online-only | Manual CRUD remains the offline fallback; parse/confirm needs the backend and provider network |
+| AI provider output quality can vary | Ambiguous or incomplete records block confirmation until edited in the preview |
 | AI provider prices can change | Keep env cost hints updated from OpenAI/Groq pricing pages |
 | Secure production secrets are placeholders | Replace `.env` values before deployment |
 | Single-device assumption still active | Multi-device sync conflict handling can wait |
@@ -563,7 +602,7 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | Product stance | Private single-trader operating system, not SaaS |
 | First app screen | Setup screen when no token exists |
 | Post-setup app shape | Five-tab shell: Today, Money, Deals, People, More |
-| Universal input | Present visually in Phase 0 but does not parse or create records yet |
+| Universal input | Started as Phase 0 visual shell and became real parse/confirm flow in Phase 3 |
 | Offline-first foundation | Drift database exists before CRUD screens |
 | Money storage | Integer paise locally; decimal/string conversion deferred to API boundary work |
 | Sync queue | `pending_sync` exists locally for future offline-first writes |
@@ -694,6 +733,27 @@ Status: Phase 2 Today, Tasks, Call Logs, Insights, and local notifications imple
 | Notification copy | Uses `₹` for user-facing money text |
 | Phase boundary | No AI parsing, reports, admin dashboard, advanced insights screen, or release assets |
 
+## Phase 3 Data Decisions
+
+| Item | Decision |
+|---|---|
+| Phase shape | One coordinated Phase 3 with internal 3A parser, 3B confirm, 3C ParseSheet, and 3D hardening gates |
+| AI authority | Backend parse/confirm is authoritative; Flutter does not create AI records blindly |
+| Confirmation policy | AI output is previewed first, editable by the user, then confirmed |
+| Create-only boundary | Phase 3 AI creates new records only; update/delete commands remain manual for safety |
+| Offline boundary | AI parse/confirm requires backend access; manual CRUD remains available offline |
+| Money contract | Parser preview uses integer paise |
+| Deal contract | Deals use bucket-wise item rows with free-text quantity/rate and manual item totals |
+| Party matching | Server performs exact, unique prefix/first-name, and unambiguous Levenshtein matching |
+| New party behavior | Clear new contacts are auto-created on confirm; ambiguous matches block until edited |
+| Idempotency | Confirm retries return stored created results instead of creating duplicates |
+| Auditability | Every parse attempt records provider/model/usage/error and confirmed result where available |
+| Rate limit | Default parse limit is `20` calls/hour/user through `AI_PARSE_RATE_LIMIT_PER_HOUR` |
+| Provider switch | Existing `AI_PROVIDER`, OpenAI, and Groq env settings remain the single switch |
+| UI placement | Universal input stays in the same shell position but now opens ParseSheet |
+| Manual fallback | ParseSheet shortcuts open existing manual Sale/Purchase, Payment, Expense, and Call Task flows |
+| Phase boundary | No reports dashboard, weekly AI summaries, admin AI logs UI, speech package, or AI update/delete in Phase 3 |
+
 ## Next Step
 
-Smoke Phase 2 on the IQOO: run `make build`, `make up`, `make migrate`, `make health`, then `make run`; create a task, postpone it, complete it, create a call task, tap Call, return to the app, save an outcome, confirm the follow-up appears, verify the People profile Calls tab, relaunch, pull refresh, and allow notifications when Android asks.
+Smoke Phase 3 on the IQOO: confirm `.env` has a valid AI key and `AI_PROVIDER=openai` or `AI_PROVIDER=groq`, then run `make build`, `make up`, `make migrate`, `make health`, and `make run`; open the universal input, type or voice a mixed trader note, parse it, edit/remove any preview items, confirm, then verify the new records in Today, People, Deals, and Money.

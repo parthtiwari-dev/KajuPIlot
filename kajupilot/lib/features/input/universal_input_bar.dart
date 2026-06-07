@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/kaju_colors.dart';
 import '../../core/theme/spacing.dart';
+import 'parse_sheet.dart';
 
 class UniversalInputBar extends StatelessWidget {
   const UniversalInputBar({super.key});
@@ -23,7 +24,7 @@ class UniversalInputBar extends StatelessWidget {
         child: InkWell(
           key: const Key('universal-input-bar'),
           borderRadius: BorderRadius.circular(KajuRadius.md),
-          onTap: () => _showInputSheet(context),
+          onTap: () => showParseSheet(context),
           child: Container(
             height: 56,
             padding: const EdgeInsets.symmetric(horizontal: KajuSpacing.md),
@@ -37,7 +38,7 @@ class UniversalInputBar extends StatelessWidget {
                 const SizedBox(width: KajuSpacing.sm),
                 Expanded(
                   child: Text(
-                    'Sold 50kg W320 to Amit at ₹780...',
+                    'Kal Amit ko 80k ke liye call...',
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: colors.textSecondary,
@@ -51,70 +52,6 @@ class UniversalInputBar extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  void _showInputSheet(BuildContext context) {
-    final colors = context.kajuColors;
-
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: colors.bgElevated,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(KajuRadius.sheet),
-        ),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: KajuSpacing.lg,
-            right: KajuSpacing.lg,
-            top: KajuSpacing.md,
-            bottom: MediaQuery.of(context).viewInsets.bottom + KajuSpacing.xl,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: colors.borderMedium,
-                    borderRadius: BorderRadius.circular(KajuRadius.full),
-                  ),
-                ),
-              ),
-              const SizedBox(height: KajuSpacing.lg),
-              Text(
-                "What's happening?",
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: KajuSpacing.md),
-              TextField(
-                minLines: 4,
-                maxLines: 7,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Tomorrow call Amit for 80k payment...',
-                ),
-              ),
-              const SizedBox(height: KajuSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: null,
-                  icon: const Icon(Icons.auto_awesome),
-                  label: const Text('Parse'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }

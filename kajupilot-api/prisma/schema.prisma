@@ -246,14 +246,19 @@ enum CallOutcome {
 }
 
 model AiParseLog {
-  id          String    @id @default(uuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  rawInput    String
-  parsedJson  Json
-  confirmed   Boolean   @default(false)
-  confirmedAt DateTime?
-  createdAt   DateTime  @default(now())
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  rawInput      String
+  parsedJson    Json
+  provider      String?
+  model         String?
+  usageJson     Json?
+  error         String?
+  confirmed     Boolean   @default(false)
+  confirmedAt   DateTime?
+  confirmedJson Json?
+  createdAt     DateTime  @default(now())
 
   @@index([userId, createdAt])
 }
