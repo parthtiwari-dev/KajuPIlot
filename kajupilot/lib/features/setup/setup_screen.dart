@@ -5,6 +5,7 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/theme/kaju_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../shared/widgets/kaju_button_spinner.dart';
+import '../../shared/widgets/kaju_logo_mark.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
@@ -45,15 +46,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   children: [
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: colors.accentMuted,
-                          borderRadius: BorderRadius.circular(KajuRadius.lg),
-                        ),
-                        child: Icon(Icons.store_outlined, color: colors.accent),
-                      ),
+                      child: const KajuLogoMark(size: 56),
                     ),
                     const SizedBox(height: KajuSpacing.lg),
                     Text('KajuPilot',

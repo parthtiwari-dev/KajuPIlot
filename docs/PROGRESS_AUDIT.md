@@ -902,11 +902,13 @@ Status: Phase 5 Admin Dashboard implemented and verified; ready for Phase 6 plan
 | Onboarding storage | Completion is stored locally through secure storage under a separate key from the device token |
 | Onboarding copy | Three slides: calls planned, money tracked, and universal input |
 | Android identity | `applicationId` and namespace changed to `com.kajupilot.app`; app label changed to `KajuPilot` |
-| Launcher icon | Added KajuPilot dark/accent adaptive icon plus non-adaptive fallback icon resources |
-| Launch background | Android launch background uses dark KajuPilot styling with centered mark |
-| Release version | Flutter version incremented to `1.0.0+6` for the first private release build |
+| Launcher icon | Refined to a reference-style golden cashew silhouette and scaled inside Android's adaptive safe zone |
+| In-app logo | Splash, setup, and onboarding use the shared reference-style `KajuLogoMark` custom painter |
+| Launch background | Android launch background uses dark KajuPilot styling with centered golden cashew mark |
+| Release version | Flutter version incremented to `1.0.0+2007` so it upgrades over prior private builds |
 | Release signing | Release APK still uses debug signing because no production keystore has been provided; this is acceptable for private sharing only |
 | Release target | Added `make release-apk` / `make release` for `flutter build apk --release --split-per-abi` |
+| Release API URL | `make release-apk` now accepts `API_BASE_URL=...`; final shared APK must be rebuilt after backend deployment |
 | Bottom sheets | App-owned bottom sheets now go through shared `showKajuBottomSheet` for radius, drag handle, and animation timing |
 | Haptics | Added feedback to confirm/save/delete flows; task Done already had feedback |
 | Today transitions | Today task sections now use lightweight slide/fade transitions on list changes |

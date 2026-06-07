@@ -15,6 +15,7 @@
 
 DEVICE_ID ?= 1592533185000B8
 ADMIN_PASSWORD ?= kaju_admin_dev_password
+API_BASE_URL ?= http://127.0.0.1:3000/api/v1
 COMPOSE = docker compose --env-file .env -f docker-compose.yml -f docker-compose.dev.yml
 PS = powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/dev.ps1
 
@@ -42,6 +43,7 @@ help:
 	@echo   make run DEVICE_ID=your_device_id
 	@echo   make apk        Build debug APK
 	@echo   make release-apk Build private release APKs split per ABI
+	@echo   make release-apk API_BASE_URL=https://api.example.com/api/v1
 	@echo CHECKS
 	@echo   make checks     Run Flutter, API, and admin checks
 
@@ -99,7 +101,7 @@ apk:
 	cd kajupilot && flutter.bat build apk --debug
 
 release-apk:
-	cd kajupilot && flutter.bat build apk --release --split-per-abi
+	cd kajupilot && flutter.bat build apk --release --split-per-abi --dart-define=API_BASE_URL=$(API_BASE_URL)
 
 release: release-apk
 

@@ -6,6 +6,7 @@ import '../../core/theme/kaju_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../shared/widgets/kaju_button_spinner.dart';
 import '../../shared/widgets/kaju_card.dart';
+import '../../shared/widgets/kaju_logo_mark.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -63,6 +64,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             children: [
               Row(
                 children: [
+                  const KajuLogoMark(size: 34),
+                  const SizedBox(width: KajuSpacing.sm),
                   Text(
                     'KajuPilot',
                     style: Theme.of(context).textTheme.titleLarge,

@@ -12,6 +12,7 @@ import '../../features/people/person_profile_screen.dart';
 import '../../features/setup/setup_screen.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/today/today_screen.dart';
+import '../../shared/widgets/kaju_logo_mark.dart';
 import '../auth/auth_controller.dart';
 import '../onboarding/onboarding_controller.dart';
 
@@ -143,20 +144,7 @@ class KajuSplashScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Icon(
-                Icons.store_outlined,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
+            const KajuLogoMark(size: 64),
             const SizedBox(height: 16),
             Text('KajuPilot', style: Theme.of(context).textTheme.titleLarge),
           ],
