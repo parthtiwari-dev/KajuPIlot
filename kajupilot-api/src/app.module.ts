@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { AdminModule } from "./admin/admin.module";
 import { AiModule } from "./ai/ai.module";
 import { AuthModule } from "./auth/auth.module";
 import { CallLogsModule } from "./call-logs/call-logs.module";
@@ -20,6 +21,7 @@ import { TasksModule } from "./tasks/tasks.module";
     PrismaModule,
     HealthModule,
     AuthModule,
+    AdminModule,
     AiModule,
     PartiesModule,
     DealsModule,

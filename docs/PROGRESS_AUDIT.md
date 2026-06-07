@@ -2,7 +2,7 @@
 
 Date: 2026-06-07
 Branch: `main`
-Status: Phase 4 Insights, More hub polish, and reliability fixes implemented and verified; ready for Phase 5 planning
+Status: Phase 5 Admin Dashboard implemented and verified; ready for Phase 6 planning
 
 ## Branch And Repo
 
@@ -360,6 +360,31 @@ Status: Phase 4 Insights, More hub polish, and reliability fixes implemented and
 | Improve WhatsApp normalization | Done, supports 10-digit, leading-zero, and already-international numbers |
 | Add full party history route | Done, `/people/:partyId/history` |
 | Extend party history response | Done, compatible arrays plus sorted `timeline[]` |
+| Keep roadmap doc untouched | Done |
+
+## Phase 5 Checklist
+
+| Task | Result |
+|---|---|
+| Keep Phase 5 admin-only | Done, no Flutter changes made |
+| Add admin app login | Done, `/login` posts through Next route handler |
+| Keep Caddy basic auth outer gate | Done, existing Caddy auth remains in place |
+| Use app-level admin secret | Done, `ADMIN_USER` + `ADMIN_SECRET` validates admin login |
+| Issue admin JWT | Done, backend issues `typ=admin`, `role=ADMIN` token |
+| Store token safely | Done, Next stores admin token in an HTTP-only cookie |
+| Reject device tokens on admin APIs | Done, dedicated admin guard rejects `typ=device` |
+| Add backend Admin module | Done, `AdminModule` added to the Nest app |
+| Add admin stats API | Done, `GET /api/v1/admin/stats` |
+| Add admin users APIs | Done, `GET /api/v1/admin/users`, `GET /api/v1/admin/users/:id`, and activity route |
+| Add admin AI log APIs | Done, paginated/filterable list and single-log detail |
+| Add admin exports API | Done, JSON/CSV download for allowed tables |
+| Hide secrets/tokens in exports | Done, users export never selects `deviceToken` |
+| Show bucket-wise deal detail | Done, admin deal views and exports include `DealItem` rows |
+| Build overview dashboard | Done, KPI cards, activity timeline, AI parse health, and users table |
+| Build user detail view | Done, parties, deals, payments, expenses, tasks, calls, timeline, and AI sessions |
+| Build AI logs view | Done, filters plus expandable parsed JSON/error detail |
+| Build exports view | Done, table/user/date/format form downloads through a token-safe Next proxy |
+| Add internal Docker API URL | Done, `ADMIN_API_URL` supports container-to-container admin API calls |
 | Keep roadmap doc untouched | Done |
 
 ## Phase 0 App Shell Lock
@@ -829,6 +854,45 @@ Status: Phase 4 Insights, More hub polish, and reliability fixes implemented and
 | More tools scope | Shows AI provider/model, backend health, sync queue, theme toggle, Reports/Admin placeholders, and app info |
 | Phase boundary | No admin dashboard, release assets, advanced reports, deeper notification UX, or AI action automation |
 
+## Phase 5 Data Decisions
+
+| Item | Decision |
+|---|---|
+| Phase shape | One coordinated admin phase with backend APIs, Next pages, exports, and verification |
+| Admin auth | Dual gate: Caddy basic auth for deployed admin plus app login with `ADMIN_USER`/`ADMIN_SECRET` |
+| Admin token type | Backend signs admin JWTs with `typ=admin` and `role=ADMIN` |
+| Device-token boundary | Mobile device JWTs are rejected by admin endpoints |
+| Admin session storage | Next stores the admin token in an HTTP-only cookie, not browser JavaScript |
+| Admin API URL | `ADMIN_API_URL` is used for server-side/container calls; `NEXT_PUBLIC_API_URL` remains display/local context |
+| Active users metric | Users with deal, payment, expense, task, call-log, or AI parse activity during the selected day |
+| Pending collection metric | System-wide sale receivable after linked paid amounts and unlinked received party payments |
+| AI success metric | Confirmed AI parse logs divided by total parse calls for the selected day |
+| Activity timeline | Deals, payments, expenses, tasks, call logs, and AI parse logs sorted newest-first |
+| Export date filters | Default `createdAt`; payments use `paymentDate`, expenses use `expenseDate`, tasks use `scheduledAt` |
+| Export safety | User exports omit `deviceToken`; no secrets are exposed |
+| Deal export detail | `DealItem` rows are included because bucket-wise items are the real deal source |
+| Admin UI style | Dense operational dashboard with tables, filters, compact cards, and Recharts AI health chart |
+| Phase boundary | No release assets, app animation polish, or advanced report builder in Phase 5 |
+
+## Phase 5 Verification
+
+| Check | Result |
+|---|---|
+| API format | Pass, `npm.cmd run format` |
+| API build | Pass, `npm.cmd run build` |
+| API tests | Pass, `npm.cmd test` with 17 suites and 77 tests |
+| API audit | Pass, `npm.cmd audit` reports 0 vulnerabilities |
+| Prisma validate | Pass with local `DATABASE_URL` set |
+| Admin typecheck | Pass, `npm.cmd run typecheck` |
+| Admin build | Pass, `npm.cmd run build` |
+| Admin audit | Pass, `npm.cmd audit` reports 0 vulnerabilities |
+| Docker build | Pass, `make build` rebuilt API and admin images |
+| Docker up | Pass, `make up` started Postgres, Redis, API, and admin |
+| Docker migrate | Pass, `make migrate` found no pending migrations |
+| Docker health | Pass, `make health` returned API `ok` and AI provider data |
+| Admin API smoke | Pass, admin login, stats, and backend export returned success without printing token/secret |
+| Admin web smoke | Pass, `/login`, dashboard, `/ai-logs`, and Next export proxy returned 200 |
+
 ## Next Step
 
-Plan Phase 5 from the roadmap and current progress. Before starting, run `make run` once if desired to visually confirm the More hub no longer shows raw JSON and the Tools section appears below Insights.
+Plan Phase 6 from the roadmap and current progress.

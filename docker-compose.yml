@@ -37,6 +37,8 @@ services:
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET}
       ADMIN_SETUP_CODE: ${ADMIN_SETUP_CODE}
+      ADMIN_USER: ${ADMIN_USER}
+      ADMIN_SECRET: ${ADMIN_SECRET}
       AI_PROVIDER: ${AI_PROVIDER:-openai}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
@@ -66,10 +68,13 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
+      ADMIN_API_URL: ${ADMIN_API_URL:-http://api:3000/api/v1}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       ADMIN_SECRET: ${ADMIN_SECRET}
+      ADMIN_USER: ${ADMIN_USER}
       NODE_ENV: production
       PORT: 3001
+      HOSTNAME: 0.0.0.0
     depends_on:
       - api
     networks:
