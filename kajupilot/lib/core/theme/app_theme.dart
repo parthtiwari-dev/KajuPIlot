@@ -50,19 +50,19 @@ class KajuTheme {
           color: colors.textPrimary,
           fontWeight: FontWeight.w700,
           fontSize: 32,
-          letterSpacing: -0.5,
+          letterSpacing: 0,
         ),
         headlineMedium: textTheme.headlineMedium?.copyWith(
           color: colors.textPrimary,
           fontWeight: FontWeight.w600,
           fontSize: 24,
-          letterSpacing: -0.3,
+          letterSpacing: 0,
         ),
         titleLarge: textTheme.titleLarge?.copyWith(
           color: colors.textPrimary,
           fontWeight: FontWeight.w600,
           fontSize: 18,
-          letterSpacing: -0.2,
+          letterSpacing: 0,
         ),
         titleMedium: textTheme.titleMedium?.copyWith(
           color: colors.textPrimary,
@@ -81,7 +81,7 @@ class KajuTheme {
           color: colors.textMuted,
           fontWeight: FontWeight.w500,
           fontSize: 11,
-          letterSpacing: 0.5,
+          letterSpacing: 0,
         ),
       ),
       appBarTheme: AppBarTheme(

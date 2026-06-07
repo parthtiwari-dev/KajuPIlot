@@ -33,7 +33,7 @@ class EmptyFeatureScreen extends StatelessWidget {
           eyebrow.toUpperCase(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: colors.textMuted,
-                letterSpacing: 0.5,
+                letterSpacing: 0,
               ),
         ),
         const SizedBox(height: KajuSpacing.sm),

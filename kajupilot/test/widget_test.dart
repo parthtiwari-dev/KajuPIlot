@@ -6,6 +6,7 @@ import 'package:kajupilot/app/kaju_app.dart';
 import 'package:kajupilot/core/auth/token_storage.dart';
 import 'package:kajupilot/core/db/app_database.dart';
 import 'package:kajupilot/core/db/app_database_provider.dart';
+import 'package:kajupilot/core/onboarding/onboarding_storage.dart';
 import 'package:kajupilot/features/deals/data/deal_models.dart';
 import 'package:kajupilot/features/deals/data/deals_repository.dart';
 import 'package:kajupilot/features/money/data/money_models.dart';
@@ -14,6 +15,25 @@ import 'package:kajupilot/features/today/data/tasks_repository.dart';
 import 'package:kajupilot/features/today/data/today_models.dart';
 
 void main() {
+  testWidgets('first launch shows onboarding before setup', (tester) async {
+    await pumpKajuApp(tester, onboardingComplete: false);
+
+    expect(find.byKey(const Key('onboarding-screen')), findsOneWidget);
+    expect(find.text('Your calls, planned'), findsOneWidget);
+  });
+
+  testWidgets('onboarding completion opens setup when no token exists',
+      (tester) async {
+    await pumpKajuApp(tester, onboardingComplete: false);
+
+    await tester.tap(find.text('Skip'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(find.byKey(const Key('setup-screen')), findsOneWidget);
+    expect(find.text('Private setup'), findsOneWidget);
+  });
+
   testWidgets('shows setup screen when no token is stored', (tester) async {
     await pumpKajuApp(tester);
 
@@ -40,7 +60,11 @@ void main() {
   });
 }
 
-Future<void> pumpKajuApp(WidgetTester tester, {String? token}) async {
+Future<void> pumpKajuApp(
+  WidgetTester tester, {
+  String? token,
+  bool onboardingComplete = true,
+}) async {
   final database = AppDatabase(NativeDatabase.memory());
   addTearDown(database.close);
 
@@ -49,6 +73,9 @@ Future<void> pumpKajuApp(WidgetTester tester, {String? token}) async {
       overrides: [
         tokenStorageProvider.overrideWithValue(
           MemoryTokenStorage(initialToken: token),
+        ),
+        onboardingStorageProvider.overrideWithValue(
+          MemoryOnboardingStorage(initialComplete: onboardingComplete),
         ),
         appDatabaseProvider.overrideWithValue(database),
         todayTasksProvider.overrideWith(
@@ -98,5 +125,20 @@ class MemoryTokenStorage implements TokenStorage {
   @override
   Future<void> clearToken() async {
     _token = null;
+  }
+}
+
+class MemoryOnboardingStorage implements OnboardingStorage {
+  MemoryOnboardingStorage({required bool initialComplete})
+      : _complete = initialComplete;
+
+  bool _complete;
+
+  @override
+  Future<bool> isComplete() async => _complete;
+
+  @override
+  Future<void> markComplete() async {
+    _complete = true;
   }
 }

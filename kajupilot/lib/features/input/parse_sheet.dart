@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,6 +12,8 @@ import '../../features/deals/widgets/deal_sheet.dart';
 import '../../features/money/widgets/expense_sheet.dart';
 import '../../features/money/widgets/payment_sheet.dart';
 import '../../features/today/widgets/task_sheet.dart';
+import '../../shared/widgets/kaju_bottom_sheet.dart';
+import '../../shared/widgets/kaju_button_spinner.dart';
 import '../../shared/widgets/kaju_card.dart';
 import '../../shared/widgets/kaju_empty_state.dart';
 import '../../shared/widgets/kaju_skeleton.dart';
@@ -19,10 +22,8 @@ import 'ai_parse_models.dart';
 import 'ai_parser_repository.dart';
 
 Future<void> showParseSheet(BuildContext context) {
-  return showModalBottomSheet<void>(
+  return showKajuBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (_) => const ParseSheet(),
   );
 }
@@ -66,7 +67,7 @@ class _ParseSheetState extends ConsumerState<ParseSheet> {
         child: Padding(
           padding: EdgeInsets.fromLTRB(
             KajuSpacing.lg,
-            KajuSpacing.md,
+            KajuSpacing.sm,
             KajuSpacing.lg,
             bottom + KajuSpacing.lg,
           ),
@@ -121,21 +122,9 @@ class _ParseSheetState extends ConsumerState<ParseSheet> {
   }
 
   Widget _header(BuildContext context) {
-    final colors = context.kajuColors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(
-          child: Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: colors.borderMedium,
-              borderRadius: BorderRadius.circular(KajuRadius.full),
-            ),
-          ),
-        ),
-        const SizedBox(height: KajuSpacing.lg),
         Text("What's happening?",
             style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: KajuSpacing.xs),
@@ -260,11 +249,7 @@ class _ParseSheetState extends ConsumerState<ParseSheet> {
           key: const Key('ai-confirm-button'),
           onPressed: canConfirm ? _confirm : null,
           icon: _isConfirming
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
+              ? const KajuButtonSpinner()
               : const Icon(Icons.check_outlined),
           label: Text(
             invalidCount == 0
@@ -321,6 +306,7 @@ class _ParseSheetState extends ConsumerState<ParseSheet> {
           .read(aiParserRepositoryProvider)
           .confirm(logId: logId, items: _items);
       if (!mounted) return;
+      HapticFeedback.mediumImpact();
       Navigator.of(context).pop();
       router.go('/today');
       messenger.showSnackBar(

@@ -439,36 +439,87 @@ class _TaskSection extends StatelessWidget {
     return _Section(
       title: title,
       children: [
-        for (final item in items) ...[
-          Dismissible(
-            key: Key('today-task-${item.task.id}'),
-            direction: DismissDirection.endToStart,
-            background: const _DeleteBackground(),
-            onDismissed: (_) {
-              final container = ProviderScope.containerOf(context);
-              final repository = container.read(tasksRepositoryProvider);
-              unawaited(repository.softDelete(item.task.id));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${item.task.title} deleted'),
-                  action: SnackBarAction(
-                    label: 'Undo',
-                    onPressed: () => unawaited(repository.restore(item.task)),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 260),
+          transitionBuilder: (child, animation) {
+            final offset = Tween<Offset>(
+              begin: const Offset(0, 0.06),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+            );
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(position: offset, child: child),
+            );
+          },
+          child: Column(
+            key: ValueKey(
+              'today-task-section-$title-${items.map((item) => item.task.id).join('|')}',
+            ),
+            children: [
+              for (final item in items) ...[
+                Dismissible(
+                  key: Key('today-task-${item.task.id}'),
+                  direction: DismissDirection.endToStart,
+                  background: const _DeleteBackground(),
+                  onDismissed: (_) {
+                    HapticFeedback.mediumImpact();
+                    final container = ProviderScope.containerOf(context);
+                    final repository = container.read(tasksRepositoryProvider);
+                    unawaited(repository.softDelete(item.task.id));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${item.task.title} deleted'),
+                        action: SnackBarAction(
+                          label: 'Undo',
+                          onPressed: () =>
+                              unawaited(repository.restore(item.task)),
+                        ),
+                      ),
+                    );
+                  },
+                  child: _AnimatedTaskEntry(
+                    child: TaskCard(
+                      item: item,
+                      onCall: () => onCall(item),
+                      onDone: () => onDone(item),
+                      onPostpone: () => onPostpone(item),
+                      onTap: () => onTap(item),
+                    ),
                   ),
                 ),
-              );
-            },
-            child: TaskCard(
-              item: item,
-              onCall: () => onCall(item),
-              onDone: () => onDone(item),
-              onPostpone: () => onPostpone(item),
-              onTap: () => onTap(item),
-            ),
+                const SizedBox(height: KajuSpacing.md),
+              ],
+            ],
           ),
-          const SizedBox(height: KajuSpacing.md),
-        ],
+        ),
       ],
+    );
+  }
+}
+
+class _AnimatedTaskEntry extends StatelessWidget {
+  const _AnimatedTaskEntry({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 14 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }
@@ -582,7 +633,7 @@ class _Section extends StatelessWidget {
           title.toUpperCase(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: colors.textMuted,
-                letterSpacing: 0.5,
+                letterSpacing: 0,
               ),
         ),
         const SizedBox(height: KajuSpacing.md),

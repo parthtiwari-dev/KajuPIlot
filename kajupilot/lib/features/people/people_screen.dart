@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/kaju_colors.dart';
@@ -57,7 +58,7 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
                       'CUSTOMERS AND SUPPLIERS',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color: colors.textMuted,
-                            letterSpacing: 0.5,
+                            letterSpacing: 0,
                           ),
                     ),
                     const SizedBox(height: KajuSpacing.sm),
@@ -173,6 +174,7 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
   }
 
   Future<void> _delete(PartyListItem item) async {
+    HapticFeedback.mediumImpact();
     final repository = ref.read(partiesRepositoryProvider);
     final deleted = await repository.softDelete(item.party.id);
     if (!mounted || deleted == null) {

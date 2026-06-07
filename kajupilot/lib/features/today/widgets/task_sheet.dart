@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/db/app_database.dart';
 import '../../../core/theme/spacing.dart';
+import '../../../shared/widgets/kaju_bottom_sheet.dart';
+import '../../../shared/widgets/kaju_button_spinner.dart';
 import '../../people/data/parties_repository.dart';
 import '../data/tasks_repository.dart';
 import '../data/today_models.dart';
 
 Future<void> showTaskSheet(BuildContext context, {TaskListItem? item}) {
-  return showModalBottomSheet<void>(
+  return showKajuBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
     builder: (_) => TaskSheet(item: item),
   );
 }
@@ -182,12 +184,7 @@ class _TaskSheetState extends ConsumerState<TaskSheet> {
                       child: FilledButton.icon(
                         onPressed: _saving ? null : _save,
                         icon: _saving
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
+                            ? const KajuButtonSpinner()
                             : const Icon(Icons.check_outlined),
                         label: const Text('Save task'),
                       ),
@@ -266,6 +263,7 @@ class _TaskSheetState extends ConsumerState<TaskSheet> {
       );
     }
     if (mounted) {
+      HapticFeedback.mediumImpact();
       Navigator.of(context).pop();
     }
   }

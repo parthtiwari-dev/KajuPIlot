@@ -8,16 +8,15 @@ import '../../../core/theme/spacing.dart';
 import '../../../core/utils/currency.dart';
 import '../../../core/utils/dates.dart';
 import '../../../shared/widgets/amount_display.dart';
+import '../../../shared/widgets/kaju_bottom_sheet.dart';
 import '../../people/data/parties_repository.dart';
 import '../../people/data/party_models.dart';
 import '../data/deal_models.dart';
 import '../data/deals_repository.dart';
 
 Future<void> showDealSheet(BuildContext context, {DealListItem? item}) {
-  return showModalBottomSheet<void>(
+  return showKajuBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (_) => DealSheet(item: item),
   );
 }
@@ -467,6 +466,7 @@ class _DealSheetState extends ConsumerState<DealSheet> {
       return;
     }
 
+    HapticFeedback.mediumImpact();
     final messenger = ScaffoldMessenger.of(context);
     final repository = ref.read(dealsRepositoryProvider);
     final deleted = await repository.softDelete(item.deal.id);

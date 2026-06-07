@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/theme/kaju_colors.dart';
 import '../../core/theme/spacing.dart';
+import '../../shared/widgets/kaju_button_spinner.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
@@ -102,11 +103,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       key: const Key('setup-submit-button'),
                       onPressed: authState.isLoading ? null : _submit,
                       child: authState.isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
+                          ? const KajuButtonSpinner()
                           : const Text('Continue'),
                     ),
                   ],

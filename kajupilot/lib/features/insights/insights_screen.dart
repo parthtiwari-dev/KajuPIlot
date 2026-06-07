@@ -49,7 +49,7 @@ class InsightsScreen extends ConsumerWidget {
               'INSIGHTS',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: colors.textMuted,
-                    letterSpacing: 0.5,
+                    letterSpacing: 0,
                   ),
             ),
             const SizedBox(height: KajuSpacing.sm),
@@ -156,7 +156,7 @@ class _MoreToolsSection extends StatelessWidget {
           'TOOLS',
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: colors.textMuted,
-                letterSpacing: 0.5,
+                letterSpacing: 0,
               ),
         ),
         const SizedBox(height: KajuSpacing.md),
@@ -289,7 +289,7 @@ class _ThemeToolRow extends StatelessWidget {
     return _ToolRow(
       icon: isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
       title: 'Theme',
-      subtitle: isDark ? 'Dark mode' : 'Light mode',
+      subtitle: isDark ? 'Dark theme is on' : 'Light theme is on',
       trailing: Switch(
         value: isDark,
         onChanged: (value) {
@@ -694,7 +694,7 @@ class _PartyInsightSection extends StatelessWidget {
           title.toUpperCase(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: colors.textMuted,
-                letterSpacing: 0.5,
+                letterSpacing: 0,
               ),
         ),
         const SizedBox(height: KajuSpacing.md),

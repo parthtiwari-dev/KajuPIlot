@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/db/app_database.dart';
@@ -74,7 +75,7 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen>
                           style:
                               Theme.of(context).textTheme.labelSmall?.copyWith(
                                     color: colors.textMuted,
-                                    letterSpacing: 0.5,
+                                    letterSpacing: 0,
                                   ),
                         ),
                         const SizedBox(height: KajuSpacing.sm),
@@ -444,6 +445,7 @@ class _ExpensesTab extends ConsumerWidget {
     WidgetRef ref,
     Expense expense,
   ) async {
+    HapticFeedback.mediumImpact();
     final repository = ref.read(expensesRepositoryProvider);
     final deleted = await repository.softDelete(expense.id);
     if (!context.mounted || deleted == null) {

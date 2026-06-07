@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/kaju_colors.dart';
@@ -57,7 +58,7 @@ class _DealsScreenState extends ConsumerState<DealsScreen> {
                       'SALES AND PURCHASES',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color: colors.textMuted,
-                            letterSpacing: 0.5,
+                            letterSpacing: 0,
                           ),
                     ),
                     const SizedBox(height: KajuSpacing.sm),
@@ -183,6 +184,7 @@ class _DealsScreenState extends ConsumerState<DealsScreen> {
   }
 
   Future<void> _delete(DealListItem item) async {
+    HapticFeedback.mediumImpact();
     final repository = ref.read(dealsRepositoryProvider);
     final deleted = await repository.softDelete(item.deal.id);
     if (!mounted || deleted == null) {

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/spacing.dart';
+import '../../../shared/widgets/kaju_bottom_sheet.dart';
 
 Future<DateTime?> showPostponeSheet(
   BuildContext context, {
   required DateTime initialDate,
 }) {
-  return showModalBottomSheet<DateTime>(
+  return showKajuBottomSheet<DateTime>(
     context: context,
     builder: (_) => PostponeSheet(initialDate: initialDate),
   );

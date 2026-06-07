@@ -1,4 +1,4 @@
-package com.example.kajupilot
+package com.kajupilot.app
 
 import android.app.Activity
 import android.content.ActivityNotFoundException

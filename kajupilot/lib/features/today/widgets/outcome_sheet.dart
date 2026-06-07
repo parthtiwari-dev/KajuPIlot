@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/spacing.dart';
 import '../../../core/utils/currency.dart';
+import '../../../shared/widgets/kaju_bottom_sheet.dart';
+import '../../../shared/widgets/kaju_button_spinner.dart';
 import '../data/call_logs_repository.dart';
 import '../data/today_models.dart';
 
@@ -10,9 +13,8 @@ Future<void> showOutcomeSheet(
   BuildContext context, {
   required TaskListItem task,
 }) {
-  return showModalBottomSheet<void>(
+  return showKajuBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
     builder: (_) => OutcomeSheet(task: task),
   );
 }
@@ -108,11 +110,7 @@ class _OutcomeSheetState extends ConsumerState<OutcomeSheet> {
                 child: FilledButton.icon(
                   onPressed: _saving ? null : _save,
                   icon: _saving
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
+                      ? const KajuButtonSpinner()
                       : const Icon(Icons.check_outlined),
                   label: const Text('Save outcome'),
                 ),
@@ -160,6 +158,7 @@ class _OutcomeSheetState extends ConsumerState<OutcomeSheet> {
         );
 
     if (mounted) {
+      HapticFeedback.mediumImpact();
       Navigator.of(context).pop();
     }
   }

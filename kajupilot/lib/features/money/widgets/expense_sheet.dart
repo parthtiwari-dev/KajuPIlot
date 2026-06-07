@@ -7,14 +7,13 @@ import '../../../core/theme/kaju_colors.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/utils/currency.dart';
 import '../../../core/utils/dates.dart';
+import '../../../shared/widgets/kaju_bottom_sheet.dart';
 import '../data/expenses_repository.dart';
 import '../data/money_models.dart';
 
 Future<void> showExpenseSheet(BuildContext context, {Expense? expense}) {
-  return showModalBottomSheet<void>(
+  return showKajuBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (_) => ExpenseSheet(expense: expense),
   );
 }
@@ -261,6 +260,7 @@ class _ExpenseSheetState extends ConsumerState<ExpenseSheet> {
       return;
     }
 
+    HapticFeedback.mediumImpact();
     final messenger = ScaffoldMessenger.of(context);
     final repository = ref.read(expensesRepositoryProvider);
     final deleted = await repository.softDelete(expense.id);

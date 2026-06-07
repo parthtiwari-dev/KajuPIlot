@@ -10,7 +10,7 @@
 .PHONY: help \
         env env-check hash doctor \
         build build-nc up up-full down restart ps logs migrate health \
-        run phone devices apk \
+        run phone devices apk release-apk release \
         api-build api-test api-audit admin-build admin-audit checks
 
 DEVICE_ID ?= 1592533185000B8
@@ -41,6 +41,7 @@ help:
 	@echo   make run        Run on IQOO device id $(DEVICE_ID)
 	@echo   make run DEVICE_ID=your_device_id
 	@echo   make apk        Build debug APK
+	@echo   make release-apk Build private release APKs split per ABI
 	@echo CHECKS
 	@echo   make checks     Run Flutter, API, and admin checks
 
@@ -96,6 +97,11 @@ phone: run
 
 apk:
 	cd kajupilot && flutter.bat build apk --debug
+
+release-apk:
+	cd kajupilot && flutter.bat build apk --release --split-per-abi
+
+release: release-apk
 
 api-build:
 	cd kajupilot-api && npm.cmd run build

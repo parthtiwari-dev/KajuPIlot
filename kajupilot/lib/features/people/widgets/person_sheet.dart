@@ -6,14 +6,13 @@ import '../../../core/db/app_database.dart';
 import '../../../core/platform/phone_contact_picker.dart';
 import '../../../core/theme/kaju_colors.dart';
 import '../../../core/theme/spacing.dart';
+import '../../../shared/widgets/kaju_bottom_sheet.dart';
 import '../data/parties_repository.dart';
 import '../data/party_models.dart';
 
 Future<void> showPersonSheet(BuildContext context, {Party? party}) {
-  return showModalBottomSheet<void>(
+  return showKajuBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (_) => PersonSheet(party: party),
   );
 }

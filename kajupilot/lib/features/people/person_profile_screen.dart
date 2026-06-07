@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -11,6 +12,7 @@ import '../../core/theme/kaju_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../shared/widgets/amount_display.dart';
 import '../../shared/widgets/kaju_action_button.dart';
+import '../../shared/widgets/kaju_bottom_sheet.dart';
 import '../../shared/widgets/kaju_empty_state.dart';
 import '../../shared/widgets/kaju_card.dart';
 import '../../shared/widgets/kaju_skeleton.dart';
@@ -366,9 +368,8 @@ class _TrustBadge extends ConsumerWidget {
     WidgetRef ref,
     TrustTagValue selected,
   ) async {
-    final tag = await showModalBottomSheet<TrustTagValue>(
+    final tag = await showKajuBottomSheet<TrustTagValue>(
       context: context,
-      showDragHandle: true,
       builder: (context) {
         return SafeArea(
           child: Column(
@@ -563,6 +564,7 @@ class _ProfileDealsTab extends ConsumerWidget {
     WidgetRef ref,
     DealListItem item,
   ) async {
+    HapticFeedback.mediumImpact();
     final repository = ref.read(dealsRepositoryProvider);
     final deleted = await repository.softDelete(item.deal.id);
     ref.invalidate(partyStatsProvider(partyId));
@@ -677,6 +679,7 @@ class _ProfilePaymentsTab extends ConsumerWidget {
     WidgetRef ref,
     PaymentListItem item,
   ) async {
+    HapticFeedback.mediumImpact();
     final repository = ref.read(paymentsRepositoryProvider);
     final deleted = await repository.softDelete(item.payment.id);
     ref.invalidate(partyStatsProvider(partyId));

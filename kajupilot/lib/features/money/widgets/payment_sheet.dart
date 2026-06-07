@@ -8,16 +8,15 @@ import '../../../core/theme/spacing.dart';
 import '../../../core/utils/currency.dart';
 import '../../../core/utils/dates.dart';
 import '../../../shared/widgets/amount_display.dart';
+import '../../../shared/widgets/kaju_bottom_sheet.dart';
 import '../../people/data/parties_repository.dart';
 import '../../people/data/party_models.dart';
 import '../data/money_models.dart';
 import '../data/payments_repository.dart';
 
 Future<void> showPaymentSheet(BuildContext context, {PaymentListItem? item}) {
-  return showModalBottomSheet<void>(
+  return showKajuBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (_) => PaymentSheet(item: item),
   );
 }
@@ -323,6 +322,7 @@ class _PaymentSheetState extends ConsumerState<PaymentSheet> {
       return;
     }
 
+    HapticFeedback.mediumImpact();
     final messenger = ScaffoldMessenger.of(context);
     final repository = ref.read(paymentsRepositoryProvider);
     final deleted = await repository.softDelete(item.payment.id);

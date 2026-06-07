@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/deals/deals_screen.dart';
 import '../../features/insights/insights_screen.dart';
 import '../../features/money/money_screen.dart';
+import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/people/people_screen.dart';
 import '../../features/people/party_history_screen.dart';
 import '../../features/people/person_profile_screen.dart';
@@ -12,17 +13,24 @@ import '../../features/setup/setup_screen.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/today/today_screen.dart';
 import '../auth/auth_controller.dart';
+import '../onboarding/onboarding_controller.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authControllerProvider);
+  final onboardingState = ref.watch(onboardingControllerProvider);
 
   return GoRouter(
     initialLocation: '/today',
     redirect: (context, state) {
       final path = state.uri.path;
 
-      if (authState.isLoading) {
+      if (authState.isLoading || onboardingState.isLoading) {
         return path == '/splash' ? null : '/splash';
+      }
+
+      final onboardingComplete = onboardingState.valueOrNull ?? false;
+      if (!onboardingComplete) {
+        return path == '/onboarding' ? null : '/onboarding';
       }
 
       final isSignedIn = authState.valueOrNull != null;
@@ -30,7 +38,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return path == '/setup' ? null : '/setup';
       }
 
-      if (path == '/' || path == '/setup' || path == '/splash') {
+      if (path == '/' ||
+          path == '/setup' ||
+          path == '/splash' ||
+          path == '/onboarding') {
         return '/today';
       }
 
@@ -48,6 +59,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/setup',
         builder: (context, state) => const SetupScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) {

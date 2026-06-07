@@ -893,6 +893,45 @@ Status: Phase 5 Admin Dashboard implemented and verified; ready for Phase 6 plan
 | Admin API smoke | Pass, admin login, stats, and backend export returned success without printing token/secret |
 | Admin web smoke | Pass, `/login`, dashboard, `/ai-logs`, and Next export proxy returned 200 |
 
+## Phase 6 Data Decisions
+
+| Item | Decision |
+|---|---|
+| Phase shape | Flutter-first shippability pass; backend/admin changes limited to regression checks |
+| Onboarding gate | First launch shows onboarding before setup; setup/token routing remains unchanged after onboarding |
+| Onboarding storage | Completion is stored locally through secure storage under a separate key from the device token |
+| Onboarding copy | Three slides: calls planned, money tracked, and universal input |
+| Android identity | `applicationId` and namespace changed to `com.kajupilot.app`; app label changed to `KajuPilot` |
+| Launcher icon | Added KajuPilot dark/accent adaptive icon plus non-adaptive fallback icon resources |
+| Launch background | Android launch background uses dark KajuPilot styling with centered mark |
+| Release version | Flutter version incremented to `1.0.0+6` for the first private release build |
+| Release signing | Release APK still uses debug signing because no production keystore has been provided; this is acceptable for private sharing only |
+| Release target | Added `make release-apk` / `make release` for `flutter build apk --release --split-per-abi` |
+| Bottom sheets | App-owned bottom sheets now go through shared `showKajuBottomSheet` for radius, drag handle, and animation timing |
+| Haptics | Added feedback to confirm/save/delete flows; task Done already had feedback |
+| Today transitions | Today task sections now use lightweight slide/fade transitions on list changes |
+| Theme audit | Removed remaining custom positive/negative letter spacing overrides in app UI |
+| Spinner audit | Replaced remaining button/sheet default spinners with `KajuButtonSpinner` |
+| Phase boundary | No new business modules, reports, AI update/delete, admin expansion, or Play Store workflow in Phase 6 |
+
+## Phase 6 Verification
+
+| Check | Result |
+|---|---|
+| Flutter format | Pass, `dart.bat format lib test` |
+| Flutter analyze | Pass, `flutter.bat analyze` |
+| Flutter tests | Pass, `flutter.bat test` with 56 tests |
+| Flutter debug APK | Pass, `flutter.bat build apk --debug` |
+| Flutter release APK | Pass, `flutter.bat build apk --release --split-per-abi` |
+| Release APK size | Pass, `app-arm64-v8a-release.apk` built at 22.4 MB, under the 50 MB target |
+| API build | Pass, `npm.cmd run build` |
+| API tests | Pass, `npm.cmd test` with 17 suites and 77 tests; Jest still reports an open-handle teardown warning after success |
+| API audit | Pass, `npm.cmd audit` reports 0 vulnerabilities |
+| Admin build | Pass, `npm.cmd run build` |
+| Admin audit | Pass, `npm.cmd audit` reports 0 vulnerabilities |
+| Docker health | Pass, `make health` returned API `ok` and AI provider data |
+| Phone smoke | Not run from Codex; install the fresh `com.kajupilot.app` release on IQOO and use the final manual smoke checklist |
+
 ## Next Step
 
-Plan Phase 6 from the roadmap and current progress.
+Install the fresh private APK on IQOO and run the final Phase 6 phone smoke checklist before sharing the APK.
