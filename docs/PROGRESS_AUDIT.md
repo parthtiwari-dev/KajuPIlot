@@ -2,7 +2,7 @@
 
 Date: 2026-06-07
 Branch: `main`
-Status: Phase 4 Insights, AI summaries, and People CRM polish implemented and verified; ready for Docker/IQOO smoke
+Status: Phase 4 Insights, More hub polish, and reliability fixes implemented and verified; ready for Phase 5 planning
 
 ## Branch And Repo
 
@@ -353,6 +353,7 @@ Status: Phase 4 Insights, AI summaries, and People CRM polish implemented and ve
 | Add top buyers, slow payers, inactive customers | Done |
 | Add business expense donut chart | Done with `fl_chart` |
 | Add Insights empty/loading/error/pull-to-refresh states | Done |
+| Add More tools/settings hub | Done, AI provider, backend status, sync queue, theme, reports/admin placeholders, and app info |
 | Improve profile stats | Done, deal count, pending, overdue, total sale value, and avg delay |
 | Replace inline trust chips | Done, one trust badge opens a bottom sheet |
 | Manual trust tag updates set override | Done locally and through backend update semantics |
@@ -527,18 +528,18 @@ Status: Phase 4 Insights, AI summaries, and People CRM polish implemented and ve
 | `flutter pub run build_runner build --delete-conflicting-outputs` | Pass |
 | `dart.bat format lib test` | Pass |
 | `flutter.bat analyze` | Pass |
-| `flutter.bat test` | Pass, 53 Flutter tests |
+| `flutter.bat test` | Pass, 54 Flutter tests |
 | `flutter.bat test test/features/money` | Pass, 5 Money repository tests |
 | `flutter.bat test test\features\today` | Pass, 4 Today tests |
 | `flutter.bat test test\features\input` | Pass, 5 AI parser/input tests |
 | `flutter.bat build apk --debug` | Pass |
 | `npm.cmd run build` in API | Pass |
 | `npm.cmd run format` in API | Pass |
-| `npm.cmd test` in API | Pass, 14 suites / 67 tests |
+| `npm.cmd test` in API | Pass, 15 suites / 69 tests |
 | Phase 2 targeted backend specs | Pass, 9 Tasks/Call Logs/Insights tests |
 | Phase 3 targeted backend specs | Pass, 7 AI parser tests |
-| Phase 4 targeted backend specs | Pass, weekly totals and slow-payer trust override coverage |
-| Phase 4 targeted Flutter specs | Pass, Insights empty/data/donut coverage |
+| Phase 4 targeted backend specs | Pass, weekly totals, slow-payer trust override, AI weekly JSON cleanup, and Redis shutdown coverage |
+| Phase 4 targeted Flutter specs | Pass, Insights empty/data/donut/tools/raw-JSON cleanup coverage |
 | `npm.cmd audit` in API | Pass, 0 vulnerabilities |
 | Prisma validate with `DATABASE_URL` | Pass |
 | `npm.cmd run build` in admin | Pass |
@@ -608,6 +609,11 @@ Status: Phase 4 Insights, AI summaries, and People CRM polish implemented and ve
 | Automatic trust tags could fight the trader | Added `trustTagManualOverride` and only auto-set `SLOW_PAYER` when override is false |
 | Party history was split across separate arrays | Extended history with one sorted `timeline[]` while keeping old arrays compatible |
 | AI summary jobs could leave test workers open | Disabled the BullMQ repeat worker in Jest test mode |
+| AI weekly notes showed raw fenced JSON | Added backend and Flutter cleanup for fenced JSON, stale cached insight arrays, and structural JSON lines |
+| More tab felt too narrow for its name | Added a compact tools/settings hub below the insights content |
+| AI confirm refresh could race deal/payment paid amounts | Sequenced refreshes so deals refresh first and payments write paid amounts last |
+| Hourly nudges only scheduled once | Scheduled one quiet nudge for each remaining work hour through 6 PM |
+| AI parse rate limiter leaked Redis on shutdown | Added `OnModuleDestroy` cleanup for the lazy Redis connection |
 
 ## Upgrade Notes
 
@@ -805,7 +811,7 @@ Status: Phase 4 Insights, AI summaries, and People CRM polish implemented and ve
 | Item | Decision |
 |---|---|
 | Phase shape | One coordinated Phase 4 with backend aggregations, AI summaries, Flutter Insights, and People CRM polish |
-| More tab purpose | `/more` is now the business insights surface, not a settings placeholder |
+| More tab purpose | `/more` is the insights-first hub for business intelligence, tools, and settings |
 | Weekly period | Seven days ending on `to`, or today when omitted |
 | People insight period | Thirty days ending on `to`, or today when omitted |
 | Revenue model | Received payments in the period |
@@ -820,8 +826,9 @@ Status: Phase 4 Insights, AI summaries, and People CRM polish implemented and ve
 | AI caching | Today summary caches for 12 hours; weekly insights cache for 6 hours |
 | AI failure policy | Return structured fallback so manual app usage keeps working |
 | Party history | Backend returns one sorted timeline while preserving older arrays |
-| Phase boundary | No admin dashboard, release assets, advanced reports, notification polish, or AI action automation |
+| More tools scope | Shows AI provider/model, backend health, sync queue, theme toggle, Reports/Admin placeholders, and app info |
+| Phase boundary | No admin dashboard, release assets, advanced reports, deeper notification UX, or AI action automation |
 
 ## Next Step
 
-Smoke Phase 4 on the IQOO: run `make build`, `make up`, `make migrate`, `make health`, and `make run`; add or reuse people/deals/payments/expenses/calls, open More, confirm weekly stats, AI summary, top buyers, slow payers, expense donut, profile trust update, WhatsApp button, and full history timeline.
+Plan Phase 5 from the roadmap and current progress. Before starting, run `make run` once if desired to visually confirm the More hub no longer shows raw JSON and the Tools section appears below Insights.

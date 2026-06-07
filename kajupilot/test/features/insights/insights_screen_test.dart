@@ -31,6 +31,27 @@ void main() {
     expect(find.text('Amit Verma'), findsWidgets);
     expect(find.text('Business expense mix'), findsOneWidget);
     expect(find.byType(PieChart), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('AI provider'),
+      500,
+      maxScrolls: 8,
+    );
+
+    expect(find.text('AI provider'), findsOneWidget);
+    expect(find.text('Backend'), findsOneWidget);
+    expect(find.text('Sync queue'), findsOneWidget);
+  });
+
+  testWidgets('Insights screen cleans fenced JSON weekly notes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(insightsWidget(_jsonNotesDashboard()));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('```json'), findsNothing);
+    expect(find.textContaining('"insights"'), findsNothing);
+    expect(find.textContaining('Secure upfront payments'), findsOneWidget);
   });
 }
 
@@ -38,11 +59,48 @@ Widget insightsWidget(InsightsDashboard dashboard) {
   return ProviderScope(
     overrides: [
       insightsDashboardProvider.overrideWith((ref) async => dashboard),
+      moreToolsStatusProvider.overrideWith(
+        (ref) async => MoreToolsStatus(
+          backend: BackendHealthStatus(
+            ok: true,
+            service: 'kajupilot-api',
+            timestamp: DateTime(2026, 6, 7),
+          ),
+          aiProvider: const AiProviderStatus(
+            provider: 'openai',
+            model: 'gpt-4o-mini',
+          ),
+          pendingSyncCount: 0,
+        ),
+      ),
     ],
     child: MaterialApp(
       theme: KajuTheme.dark(),
       home: const InsightsScreen(),
     ),
+  );
+}
+
+InsightsDashboard _jsonNotesDashboard() {
+  final base = _dataDashboard();
+  return InsightsDashboard(
+    aiSummary: base.aiSummary,
+    aiWeekly: AiWeeklyInsights.fromJson({
+      'insights': [
+        '```json',
+        '{',
+        '"insights": [',
+        '"Secure upfront payments before new dispatches.",',
+        ']',
+        '}',
+        '```',
+      ],
+      'provider': 'openai',
+      'model': 'gpt-4o-mini',
+      'cached': true,
+    }),
+    weekly: base.weekly,
+    people: base.people,
   );
 }
 

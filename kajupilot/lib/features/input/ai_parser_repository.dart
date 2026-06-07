@@ -23,12 +23,6 @@ final aiParserRepositoryProvider = Provider<AiParserRepository>((ref) {
         _ignoreRefresh(ref.read(partiesRepositoryProvider).refresh(
               flushPending: false,
             )),
-        _ignoreRefresh(ref.read(dealsRepositoryProvider).refresh(
-              flushPending: false,
-            )),
-        _ignoreRefresh(ref.read(paymentsRepositoryProvider).refresh(
-              flushPending: false,
-            )),
         _ignoreRefresh(ref.read(expensesRepositoryProvider).refresh(
               flushPending: false,
             )),
@@ -37,6 +31,12 @@ final aiParserRepositoryProvider = Provider<AiParserRepository>((ref) {
               flushPending: false,
             )),
       ]);
+      await _ignoreRefresh(ref.read(dealsRepositoryProvider).refresh(
+            flushPending: false,
+          ));
+      await _ignoreRefresh(ref.read(paymentsRepositoryProvider).refresh(
+            flushPending: false,
+          ));
       ref.invalidate(todayInsightsProvider(today));
     },
   );

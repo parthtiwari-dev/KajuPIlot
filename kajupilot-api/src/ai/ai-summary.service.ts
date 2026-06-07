@@ -91,7 +91,11 @@ export class AiSummaryService implements OnModuleInit, OnModuleDestroy {
     if (!refresh) {
       const cached = await this.getCached(cacheKey);
       if (cached) {
-        return { ...cached, cached: true };
+        return {
+          ...cached,
+          insights: this.cleanInsights(cached.insights),
+          cached: true,
+        };
       }
     }
 
@@ -242,28 +246,88 @@ export class AiSummaryService implements OnModuleInit, OnModuleDestroy {
     return this.redis;
   }
 
-  private parseInsights(text: string) {
+  private parseInsights(text: string): string[] {
+    const normalized = this.stripCodeFence(text.trim());
     try {
-      const parsed = JSON.parse(text.trim()) as { insights?: unknown };
+      const parsed = JSON.parse(normalized) as { insights?: unknown };
       if (Array.isArray(parsed.insights)) {
-        return parsed.insights
-          .filter((item): item is string => typeof item === "string")
-          .map((item) => item.trim())
-          .filter(Boolean)
-          .slice(0, 5);
+        const insights: string[] = this.cleanInsights(parsed.insights);
+        if (insights.length > 0) {
+          return insights;
+        }
       }
     } catch {
       // Fall through to text splitting.
     }
 
-    const lines = text
+    const lines = normalized
       .split(/\r?\n/)
-      .map((line) => line.replace(/^[-*\d.\s]+/, "").trim())
+      .map((line) => this.cleanInsightLine(line))
       .filter(Boolean)
       .slice(0, 5);
     return lines.length > 0
       ? lines
       : ["Review weekly money and call slow payers first."];
+  }
+
+  private cleanInsights(value?: unknown): string[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    const textItems = value
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (
+      textItems.some((item) => {
+        return (
+          item.startsWith("```") ||
+          item === "{" ||
+          item === "}" ||
+          item.includes('"insights"')
+        );
+      })
+    ) {
+      return this.parseInsights(textItems.join("\n"));
+    }
+
+    return textItems
+      .map((item) => this.cleanInsightLine(item))
+      .filter(Boolean)
+      .slice(0, 5);
+  }
+
+  private stripCodeFence(text: string) {
+    return text
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+  }
+
+  private cleanInsightLine(line: string) {
+    const cleaned = line
+      .replace(/^[-*\d.\s]+/, "")
+      .replace(/^"+/, "")
+      .replace(/",?$/, "")
+      .replace(/^'+/, "")
+      .replace(/',?$/, "")
+      .trim();
+
+    if (
+      !cleaned ||
+      cleaned === "{" ||
+      cleaned === "}" ||
+      cleaned === "[" ||
+      cleaned === "]" ||
+      cleaned.startsWith("```") ||
+      cleaned.includes('"insights"')
+    ) {
+      return "";
+    }
+
+    return cleaned;
   }
 
   private todayFallbackText(today: {

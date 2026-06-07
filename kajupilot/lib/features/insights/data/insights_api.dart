@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../../core/sync/pending_sync_service.dart';
 import 'insights_models.dart';
 
 final insightsApiProvider = Provider<InsightsApi>((ref) {
@@ -22,6 +23,21 @@ final insightsDashboardProvider =
     aiWeekly: aiWeekly,
     weekly: weekly,
     people: people,
+  );
+});
+
+final moreToolsStatusProvider = FutureProvider<MoreToolsStatus>((ref) async {
+  final api = ref.watch(insightsApiProvider);
+  final pendingSync = ref.watch(pendingSyncServiceProvider);
+
+  final backend = await api.health();
+  final aiProvider = await api.aiProviderStatus();
+  final pending = await pendingSync.pending(limit: 500);
+
+  return MoreToolsStatus(
+    backend: backend,
+    aiProvider: aiProvider,
+    pendingSyncCount: pending.length,
   );
 });
 
@@ -80,5 +96,29 @@ class InsightsApi {
     );
 
     return AiWeeklyInsights.fromJson(response.data ?? <String, dynamic>{});
+  }
+
+  Future<BackendHealthStatus> health() async {
+    try {
+      final response = await _apiClient.get<Map<String, dynamic>>('/health');
+      return BackendHealthStatus.fromJson(
+        response.data ?? <String, dynamic>{},
+      );
+    } catch (_) {
+      return BackendHealthStatus.offline();
+    }
+  }
+
+  Future<AiProviderStatus> aiProviderStatus() async {
+    try {
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        '/ai/providers',
+      );
+      return AiProviderStatus.fromJson(
+        response.data ?? <String, dynamic>{},
+      );
+    } catch (_) {
+      return AiProviderStatus.unknown();
+    }
   }
 }

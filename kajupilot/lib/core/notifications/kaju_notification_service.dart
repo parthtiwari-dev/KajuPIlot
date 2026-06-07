@@ -125,30 +125,32 @@ class KajuNotificationService {
       return;
     }
 
-    var target = DateTime(now.year, now.month, now.day, max(now.hour + 1, 10));
-    if (target.hour < 10) {
-      target = DateTime(now.year, now.month, now.day, 10);
-    }
-    if (target.hour > 18) {
-      return;
-    }
+    final startHour = max(now.hour + 1, 10);
+    const endHour = 18;
 
-    await _scheduleNotification(
-      id: 80002,
-      title: 'KajuPilot nudge',
-      body: '$pendingCount pending items still need attention today',
-      scheduledAt: tz.TZDateTime.from(target, tz.local),
-      details: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'kajupilot_nudges',
-          'Workday nudges',
-          channelDescription: 'Quiet nudges while work remains pending',
-          importance: Importance.defaultImportance,
-          priority: Priority.defaultPriority,
+    for (var hour = startHour; hour <= endHour; hour++) {
+      final target = DateTime(now.year, now.month, now.day, hour);
+      if (!target.isAfter(now)) {
+        continue;
+      }
+
+      await _scheduleNotification(
+        id: 80002 + hour,
+        title: 'KajuPilot nudge',
+        body: '$pendingCount pending items still need attention today',
+        scheduledAt: tz.TZDateTime.from(target, tz.local),
+        details: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'kajupilot_nudges',
+            'Workday nudges',
+            channelDescription: 'Quiet nudges while work remains pending',
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+          ),
         ),
-      ),
-      preferExact: false,
-    );
+        preferExact: false,
+      );
+    }
   }
 
   Future<void> _scheduleNotification({

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:intl/intl.dart';
 
 import '../../../core/utils/currency.dart';
@@ -29,6 +31,71 @@ class InsightsDashboard {
         weekly.topBuyers.isNotEmpty ||
         people.slowPayers.isNotEmpty;
   }
+}
+
+class MoreToolsStatus {
+  const MoreToolsStatus({
+    required this.backend,
+    required this.aiProvider,
+    required this.pendingSyncCount,
+  });
+
+  final BackendHealthStatus backend;
+  final AiProviderStatus aiProvider;
+  final int pendingSyncCount;
+}
+
+class BackendHealthStatus {
+  const BackendHealthStatus({
+    required this.ok,
+    this.service,
+    this.timestamp,
+  });
+
+  factory BackendHealthStatus.fromJson(Map<String, dynamic> json) {
+    return BackendHealthStatus(
+      ok: json['status'] == 'ok',
+      service: json['service'] as String?,
+      timestamp: _dateOrNull(json['timestamp']),
+    );
+  }
+
+  factory BackendHealthStatus.offline() {
+    return const BackendHealthStatus(ok: false);
+  }
+
+  final bool ok;
+  final String? service;
+  final DateTime? timestamp;
+}
+
+class AiProviderStatus {
+  const AiProviderStatus({
+    required this.provider,
+    required this.model,
+    this.inputCostUsd,
+    this.outputCostUsd,
+  });
+
+  factory AiProviderStatus.fromJson(Map<String, dynamic> json) {
+    final active = json['active'] as Map<String, dynamic>? ?? {};
+    final cost = active['cost'] as Map<String, dynamic>? ?? {};
+    return AiProviderStatus(
+      provider: active['provider'] as String? ?? 'unknown',
+      model: active['model'] as String? ?? 'unknown',
+      inputCostUsd: (cost['inputPerMillionTokensUsd'] as num?)?.toDouble(),
+      outputCostUsd: (cost['outputPerMillionTokensUsd'] as num?)?.toDouble(),
+    );
+  }
+
+  factory AiProviderStatus.unknown() {
+    return const AiProviderStatus(provider: 'unknown', model: 'unknown');
+  }
+
+  final String provider;
+  final String model;
+  final double? inputCostUsd;
+  final double? outputCostUsd;
 }
 
 class AiTodaySummary {
@@ -69,11 +136,7 @@ class AiWeeklyInsights {
   factory AiWeeklyInsights.fromJson(Map<String, dynamic> json) {
     final rawInsights = json['insights'];
     return AiWeeklyInsights(
-      insights: rawInsights is List
-          ? rawInsights.whereType<String>().where((item) {
-              return item.trim().isNotEmpty;
-            }).toList()
-          : const [],
+      insights: _cleanAiInsights(rawInsights),
       generatedAt: _dateOrNull(json['generatedAt']),
       provider: json['provider'] as String? ?? 'ai',
       model: json['model'] as String? ?? 'unknown',
@@ -260,4 +323,86 @@ DateTime? _dateOrNull(Object? value) {
     return null;
   }
   return DateTime.parse(value as String).toLocal();
+}
+
+List<String> _cleanAiInsights(Object? value) {
+  if (value is String) {
+    return _parseInsightText(value);
+  }
+  if (value is! List) {
+    return const [];
+  }
+
+  final lines = value
+      .whereType<String>()
+      .map((item) => item.trim())
+      .where((item) => item.isNotEmpty)
+      .toList();
+
+  if (lines.any(_looksLikeJsonScaffold)) {
+    return _parseInsightText(lines.join('\n'));
+  }
+
+  return lines
+      .map(_cleanInsightLine)
+      .where((item) => item.isNotEmpty)
+      .take(5)
+      .toList();
+}
+
+List<String> _parseInsightText(String text) {
+  final normalized = _stripCodeFence(text);
+  try {
+    final parsed = jsonDecode(normalized);
+    if (parsed is Map<String, dynamic>) {
+      final insights = parsed['insights'];
+      if (insights is List) {
+        return _cleanAiInsights(insights);
+      }
+    }
+  } catch (_) {
+    // Fall through to line cleanup.
+  }
+
+  return normalized
+      .split(RegExp(r'\r?\n'))
+      .map(_cleanInsightLine)
+      .where((item) => item.isNotEmpty)
+      .take(5)
+      .toList();
+}
+
+String _stripCodeFence(String text) {
+  return text
+      .trim()
+      .replaceFirst(RegExp(r'^```(?:json)?\s*', caseSensitive: false), '')
+      .replaceFirst(RegExp(r'\s*```$', caseSensitive: false), '')
+      .trim();
+}
+
+String _cleanInsightLine(String line) {
+  final cleaned = line
+      .trim()
+      .replaceFirst(RegExp(r'^[-*\d.\s]+'), '')
+      .replaceFirst(RegExp(r'^"+'), '')
+      .replaceFirst(RegExp(r'",?$'), '')
+      .replaceFirst(RegExp(r"^'+"), '')
+      .replaceFirst(RegExp(r"',?$"), '')
+      .trim();
+
+  if (cleaned.isEmpty || _looksLikeJsonScaffold(cleaned)) {
+    return '';
+  }
+
+  return cleaned;
+}
+
+bool _looksLikeJsonScaffold(String value) {
+  final trimmed = value.trim();
+  return trimmed.startsWith('```') ||
+      trimmed == '{' ||
+      trimmed == '}' ||
+      trimmed == '[' ||
+      trimmed == ']' ||
+      trimmed.contains('"insights"');
 }

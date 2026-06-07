@@ -1,9 +1,14 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  OnModuleDestroy,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import Redis from "ioredis";
 
 @Injectable()
-export class AiRateLimitService {
+export class AiRateLimitService implements OnModuleDestroy {
   private redis?: Redis;
   private readonly memoryCounts = new Map<
     string,
@@ -11,6 +16,10 @@ export class AiRateLimitService {
   >();
 
   constructor(private readonly configService: ConfigService) {}
+
+  async onModuleDestroy() {
+    await this.redis?.quit();
+  }
 
   async assertParseAllowed(userId: string) {
     const limit = this.limit();

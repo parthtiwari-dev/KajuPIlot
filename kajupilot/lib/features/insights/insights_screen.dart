@@ -1,3 +1,4 @@
+import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,7 @@ class InsightsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.kajuColors;
     final dashboard = ref.watch(insightsDashboardProvider);
+    final toolsStatus = ref.watch(moreToolsStatusProvider);
 
     return Scaffold(
       key: const Key('feature-insights-screen'),
@@ -28,7 +30,11 @@ class InsightsScreen extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(insightsDashboardProvider);
-          await ref.read(insightsDashboardProvider.future);
+          ref.invalidate(moreToolsStatusProvider);
+          await Future.wait([
+            ref.read(insightsDashboardProvider.future),
+            ref.read(moreToolsStatusProvider.future),
+          ]);
         },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -73,6 +79,8 @@ class InsightsScreen extends ConsumerWidget {
                 return _InsightsContent(dashboard: value);
               },
             ),
+            const SizedBox(height: KajuSpacing.lg),
+            _MoreToolsSection(status: toolsStatus),
           ],
         ),
       ),
@@ -128,6 +136,233 @@ class _InsightsContent extends StatelessWidget {
         const SizedBox(height: KajuSpacing.lg),
         _AiTipsCard(insights: dashboard.aiWeekly.insights),
       ],
+    );
+  }
+}
+
+class _MoreToolsSection extends StatelessWidget {
+  const _MoreToolsSection({required this.status});
+
+  final AsyncValue<MoreToolsStatus> status;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.kajuColors;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'TOOLS',
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: colors.textMuted,
+                letterSpacing: 0.5,
+              ),
+        ),
+        const SizedBox(height: KajuSpacing.md),
+        KajuCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              status.when(
+                loading: () => const _ToolRow(
+                  icon: Icons.auto_awesome_outlined,
+                  title: 'AI provider',
+                  subtitle: 'Checking active model',
+                ),
+                error: (_, __) => const _ToolRow(
+                  icon: Icons.auto_awesome_outlined,
+                  title: 'AI provider',
+                  subtitle: 'Unavailable',
+                  trailing: StatusBadge(
+                    label: 'Offline',
+                    tone: StatusBadgeTone.danger,
+                  ),
+                ),
+                data: (value) => _ToolRow(
+                  icon: Icons.auto_awesome_outlined,
+                  title: 'AI provider',
+                  subtitle:
+                      '${value.aiProvider.provider} / ${value.aiProvider.model}',
+                  trailing: const StatusBadge(
+                    label: 'Active',
+                    tone: StatusBadgeTone.info,
+                  ),
+                ),
+              ),
+              const _ToolDivider(),
+              status.when(
+                loading: () => const _ToolRow(
+                  icon: Icons.cloud_outlined,
+                  title: 'Backend',
+                  subtitle: 'Checking API',
+                ),
+                error: (_, __) => const _ToolRow(
+                  icon: Icons.cloud_off_outlined,
+                  title: 'Backend',
+                  subtitle: 'Unavailable',
+                  trailing: StatusBadge(
+                    label: 'Offline',
+                    tone: StatusBadgeTone.danger,
+                  ),
+                ),
+                data: (value) => _ToolRow(
+                  icon: value.backend.ok
+                      ? Icons.cloud_done_outlined
+                      : Icons.cloud_off_outlined,
+                  title: 'Backend',
+                  subtitle: value.backend.service ?? 'API unavailable',
+                  trailing: StatusBadge(
+                    label: value.backend.ok ? 'OK' : 'Offline',
+                    tone: value.backend.ok
+                        ? StatusBadgeTone.success
+                        : StatusBadgeTone.danger,
+                  ),
+                ),
+              ),
+              const _ToolDivider(),
+              status.when(
+                loading: () => const _ToolRow(
+                  icon: Icons.sync_outlined,
+                  title: 'Sync queue',
+                  subtitle: 'Checking local queue',
+                ),
+                error: (_, __) => const _ToolRow(
+                  icon: Icons.sync_problem_outlined,
+                  title: 'Sync queue',
+                  subtitle: 'Unavailable',
+                ),
+                data: (value) => _ToolRow(
+                  icon: value.pendingSyncCount == 0
+                      ? Icons.sync_outlined
+                      : Icons.sync_problem_outlined,
+                  title: 'Sync queue',
+                  subtitle: value.pendingSyncCount == 0
+                      ? 'No pending local changes'
+                      : '${value.pendingSyncCount} pending local changes',
+                  trailing: StatusBadge(
+                    label: value.pendingSyncCount == 0 ? 'Clear' : 'Pending',
+                    tone: value.pendingSyncCount == 0
+                        ? StatusBadgeTone.success
+                        : StatusBadgeTone.warning,
+                  ),
+                ),
+              ),
+              const _ToolDivider(),
+              _ThemeToolRow(
+                  isDark: Theme.of(context).brightness == Brightness.dark),
+              const _ToolDivider(),
+              const _ToolRow(
+                icon: Icons.bar_chart_outlined,
+                title: 'Reports',
+                subtitle: 'Coming in the reports phase',
+                trailing: StatusBadge(label: 'Later'),
+              ),
+              const _ToolDivider(),
+              const _ToolRow(
+                icon: Icons.admin_panel_settings_outlined,
+                title: 'Admin',
+                subtitle: 'Dashboard stays separate for now',
+                trailing: StatusBadge(label: 'Later'),
+              ),
+              const _ToolDivider(),
+              const _ToolRow(
+                icon: Icons.info_outline,
+                title: 'KajuPilot',
+                subtitle: 'Private trader operating system',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ThemeToolRow extends StatelessWidget {
+  const _ThemeToolRow({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ToolRow(
+      icon: isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+      title: 'Theme',
+      subtitle: isDark ? 'Dark mode' : 'Light mode',
+      trailing: Switch(
+        value: isDark,
+        onChanged: (value) {
+          if (value) {
+            AdaptiveTheme.of(context).setDark();
+          } else {
+            AdaptiveTheme.of(context).setLight();
+          }
+        },
+      ),
+    );
+  }
+}
+
+class _ToolRow extends StatelessWidget {
+  const _ToolRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.kajuColors;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: KajuSpacing.md,
+        vertical: KajuSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: colors.textSecondary, size: 22),
+          const SizedBox(width: KajuSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: KajuSpacing.xs),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          if (trailing != null) ...[
+            const SizedBox(width: KajuSpacing.md),
+            trailing!,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ToolDivider extends StatelessWidget {
+  const _ToolDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 1,
+      color: context.kajuColors.borderSubtle,
     );
   }
 }
