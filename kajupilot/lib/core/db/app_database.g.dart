@@ -435,6 +435,16 @@ class $PartiesTable extends Parties with TableInfo<$PartiesTable, Party> {
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('NEW'));
+  static const VerificationMeta _trustTagManualOverrideMeta =
+      const VerificationMeta('trustTagManualOverride');
+  @override
+  late final GeneratedColumn<bool> trustTagManualOverride =
+      GeneratedColumn<bool>('trust_tag_manual_override', aliasedName, false,
+          type: DriftSqlType.bool,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'CHECK ("trust_tag_manual_override" IN (0, 1))'),
+          defaultValue: const Constant(false));
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -473,6 +483,7 @@ class $PartiesTable extends Parties with TableInfo<$PartiesTable, Party> {
         phone,
         type,
         trustTag,
+        trustTagManualOverride,
         notes,
         syncId,
         createdAt,
@@ -517,6 +528,12 @@ class $PartiesTable extends Parties with TableInfo<$PartiesTable, Party> {
     if (data.containsKey('trust_tag')) {
       context.handle(_trustTagMeta,
           trustTag.isAcceptableOrUnknown(data['trust_tag']!, _trustTagMeta));
+    }
+    if (data.containsKey('trust_tag_manual_override')) {
+      context.handle(
+          _trustTagManualOverrideMeta,
+          trustTagManualOverride.isAcceptableOrUnknown(
+              data['trust_tag_manual_override']!, _trustTagManualOverrideMeta));
     }
     if (data.containsKey('notes')) {
       context.handle(
@@ -565,6 +582,9 @@ class $PartiesTable extends Parties with TableInfo<$PartiesTable, Party> {
           .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
       trustTag: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}trust_tag'])!,
+      trustTagManualOverride: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool,
+          data['${effectivePrefix}trust_tag_manual_override'])!,
       notes: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}notes']),
       syncId: attachedDatabase.typeMapping
@@ -591,6 +611,7 @@ class Party extends DataClass implements Insertable<Party> {
   final String? phone;
   final String type;
   final String trustTag;
+  final bool trustTagManualOverride;
   final String? notes;
   final String syncId;
   final DateTime createdAt;
@@ -603,6 +624,7 @@ class Party extends DataClass implements Insertable<Party> {
       this.phone,
       required this.type,
       required this.trustTag,
+      required this.trustTagManualOverride,
       this.notes,
       required this.syncId,
       required this.createdAt,
@@ -619,6 +641,7 @@ class Party extends DataClass implements Insertable<Party> {
     }
     map['type'] = Variable<String>(type);
     map['trust_tag'] = Variable<String>(trustTag);
+    map['trust_tag_manual_override'] = Variable<bool>(trustTagManualOverride);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
@@ -640,6 +663,7 @@ class Party extends DataClass implements Insertable<Party> {
           phone == null && nullToAbsent ? const Value.absent() : Value(phone),
       type: Value(type),
       trustTag: Value(trustTag),
+      trustTagManualOverride: Value(trustTagManualOverride),
       notes:
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
       syncId: Value(syncId),
@@ -661,6 +685,8 @@ class Party extends DataClass implements Insertable<Party> {
       phone: serializer.fromJson<String?>(json['phone']),
       type: serializer.fromJson<String>(json['type']),
       trustTag: serializer.fromJson<String>(json['trustTag']),
+      trustTagManualOverride:
+          serializer.fromJson<bool>(json['trustTagManualOverride']),
       notes: serializer.fromJson<String?>(json['notes']),
       syncId: serializer.fromJson<String>(json['syncId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -678,6 +704,7 @@ class Party extends DataClass implements Insertable<Party> {
       'phone': serializer.toJson<String?>(phone),
       'type': serializer.toJson<String>(type),
       'trustTag': serializer.toJson<String>(trustTag),
+      'trustTagManualOverride': serializer.toJson<bool>(trustTagManualOverride),
       'notes': serializer.toJson<String?>(notes),
       'syncId': serializer.toJson<String>(syncId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -693,6 +720,7 @@ class Party extends DataClass implements Insertable<Party> {
           Value<String?> phone = const Value.absent(),
           String? type,
           String? trustTag,
+          bool? trustTagManualOverride,
           Value<String?> notes = const Value.absent(),
           String? syncId,
           DateTime? createdAt,
@@ -705,6 +733,8 @@ class Party extends DataClass implements Insertable<Party> {
         phone: phone.present ? phone.value : this.phone,
         type: type ?? this.type,
         trustTag: trustTag ?? this.trustTag,
+        trustTagManualOverride:
+            trustTagManualOverride ?? this.trustTagManualOverride,
         notes: notes.present ? notes.value : this.notes,
         syncId: syncId ?? this.syncId,
         createdAt: createdAt ?? this.createdAt,
@@ -719,6 +749,9 @@ class Party extends DataClass implements Insertable<Party> {
       phone: data.phone.present ? data.phone.value : this.phone,
       type: data.type.present ? data.type.value : this.type,
       trustTag: data.trustTag.present ? data.trustTag.value : this.trustTag,
+      trustTagManualOverride: data.trustTagManualOverride.present
+          ? data.trustTagManualOverride.value
+          : this.trustTagManualOverride,
       notes: data.notes.present ? data.notes.value : this.notes,
       syncId: data.syncId.present ? data.syncId.value : this.syncId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -736,6 +769,7 @@ class Party extends DataClass implements Insertable<Party> {
           ..write('phone: $phone, ')
           ..write('type: $type, ')
           ..write('trustTag: $trustTag, ')
+          ..write('trustTagManualOverride: $trustTagManualOverride, ')
           ..write('notes: $notes, ')
           ..write('syncId: $syncId, ')
           ..write('createdAt: $createdAt, ')
@@ -747,7 +781,7 @@ class Party extends DataClass implements Insertable<Party> {
 
   @override
   int get hashCode => Object.hash(id, userId, name, phone, type, trustTag,
-      notes, syncId, createdAt, updatedAt, deletedAt);
+      trustTagManualOverride, notes, syncId, createdAt, updatedAt, deletedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -758,6 +792,7 @@ class Party extends DataClass implements Insertable<Party> {
           other.phone == this.phone &&
           other.type == this.type &&
           other.trustTag == this.trustTag &&
+          other.trustTagManualOverride == this.trustTagManualOverride &&
           other.notes == this.notes &&
           other.syncId == this.syncId &&
           other.createdAt == this.createdAt &&
@@ -772,6 +807,7 @@ class PartiesCompanion extends UpdateCompanion<Party> {
   final Value<String?> phone;
   final Value<String> type;
   final Value<String> trustTag;
+  final Value<bool> trustTagManualOverride;
   final Value<String?> notes;
   final Value<String> syncId;
   final Value<DateTime> createdAt;
@@ -785,6 +821,7 @@ class PartiesCompanion extends UpdateCompanion<Party> {
     this.phone = const Value.absent(),
     this.type = const Value.absent(),
     this.trustTag = const Value.absent(),
+    this.trustTagManualOverride = const Value.absent(),
     this.notes = const Value.absent(),
     this.syncId = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -799,6 +836,7 @@ class PartiesCompanion extends UpdateCompanion<Party> {
     this.phone = const Value.absent(),
     this.type = const Value.absent(),
     this.trustTag = const Value.absent(),
+    this.trustTagManualOverride = const Value.absent(),
     this.notes = const Value.absent(),
     required String syncId,
     required DateTime createdAt,
@@ -818,6 +856,7 @@ class PartiesCompanion extends UpdateCompanion<Party> {
     Expression<String>? phone,
     Expression<String>? type,
     Expression<String>? trustTag,
+    Expression<bool>? trustTagManualOverride,
     Expression<String>? notes,
     Expression<String>? syncId,
     Expression<DateTime>? createdAt,
@@ -832,6 +871,8 @@ class PartiesCompanion extends UpdateCompanion<Party> {
       if (phone != null) 'phone': phone,
       if (type != null) 'type': type,
       if (trustTag != null) 'trust_tag': trustTag,
+      if (trustTagManualOverride != null)
+        'trust_tag_manual_override': trustTagManualOverride,
       if (notes != null) 'notes': notes,
       if (syncId != null) 'sync_id': syncId,
       if (createdAt != null) 'created_at': createdAt,
@@ -848,6 +889,7 @@ class PartiesCompanion extends UpdateCompanion<Party> {
       Value<String?>? phone,
       Value<String>? type,
       Value<String>? trustTag,
+      Value<bool>? trustTagManualOverride,
       Value<String?>? notes,
       Value<String>? syncId,
       Value<DateTime>? createdAt,
@@ -861,6 +903,8 @@ class PartiesCompanion extends UpdateCompanion<Party> {
       phone: phone ?? this.phone,
       type: type ?? this.type,
       trustTag: trustTag ?? this.trustTag,
+      trustTagManualOverride:
+          trustTagManualOverride ?? this.trustTagManualOverride,
       notes: notes ?? this.notes,
       syncId: syncId ?? this.syncId,
       createdAt: createdAt ?? this.createdAt,
@@ -890,6 +934,10 @@ class PartiesCompanion extends UpdateCompanion<Party> {
     }
     if (trustTag.present) {
       map['trust_tag'] = Variable<String>(trustTag.value);
+    }
+    if (trustTagManualOverride.present) {
+      map['trust_tag_manual_override'] =
+          Variable<bool>(trustTagManualOverride.value);
     }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
@@ -921,6 +969,7 @@ class PartiesCompanion extends UpdateCompanion<Party> {
           ..write('phone: $phone, ')
           ..write('type: $type, ')
           ..write('trustTag: $trustTag, ')
+          ..write('trustTagManualOverride: $trustTagManualOverride, ')
           ..write('notes: $notes, ')
           ..write('syncId: $syncId, ')
           ..write('createdAt: $createdAt, ')
@@ -5691,6 +5740,7 @@ typedef $$PartiesTableCreateCompanionBuilder = PartiesCompanion Function({
   Value<String?> phone,
   Value<String> type,
   Value<String> trustTag,
+  Value<bool> trustTagManualOverride,
   Value<String?> notes,
   required String syncId,
   required DateTime createdAt,
@@ -5705,6 +5755,7 @@ typedef $$PartiesTableUpdateCompanionBuilder = PartiesCompanion Function({
   Value<String?> phone,
   Value<String> type,
   Value<String> trustTag,
+  Value<bool> trustTagManualOverride,
   Value<String?> notes,
   Value<String> syncId,
   Value<DateTime> createdAt,
@@ -5739,6 +5790,10 @@ class $$PartiesTableFilterComposer
 
   ColumnFilters<String> get trustTag => $composableBuilder(
       column: $table.trustTag, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get trustTagManualOverride => $composableBuilder(
+      column: $table.trustTagManualOverride,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnFilters(column));
@@ -5783,6 +5838,10 @@ class $$PartiesTableOrderingComposer
   ColumnOrderings<String> get trustTag => $composableBuilder(
       column: $table.trustTag, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get trustTagManualOverride => $composableBuilder(
+      column: $table.trustTagManualOverride,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnOrderings(column));
 
@@ -5825,6 +5884,9 @@ class $$PartiesTableAnnotationComposer
 
   GeneratedColumn<String> get trustTag =>
       $composableBuilder(column: $table.trustTag, builder: (column) => column);
+
+  GeneratedColumn<bool> get trustTagManualOverride => $composableBuilder(
+      column: $table.trustTagManualOverride, builder: (column) => column);
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
@@ -5871,6 +5933,7 @@ class $$PartiesTableTableManager extends RootTableManager<
             Value<String?> phone = const Value.absent(),
             Value<String> type = const Value.absent(),
             Value<String> trustTag = const Value.absent(),
+            Value<bool> trustTagManualOverride = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<String> syncId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -5885,6 +5948,7 @@ class $$PartiesTableTableManager extends RootTableManager<
             phone: phone,
             type: type,
             trustTag: trustTag,
+            trustTagManualOverride: trustTagManualOverride,
             notes: notes,
             syncId: syncId,
             createdAt: createdAt,
@@ -5899,6 +5963,7 @@ class $$PartiesTableTableManager extends RootTableManager<
             Value<String?> phone = const Value.absent(),
             Value<String> type = const Value.absent(),
             Value<String> trustTag = const Value.absent(),
+            Value<bool> trustTagManualOverride = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             required String syncId,
             required DateTime createdAt,
@@ -5913,6 +5978,7 @@ class $$PartiesTableTableManager extends RootTableManager<
             phone: phone,
             type: type,
             trustTag: trustTag,
+            trustTagManualOverride: trustTagManualOverride,
             notes: notes,
             syncId: syncId,
             createdAt: createdAt,

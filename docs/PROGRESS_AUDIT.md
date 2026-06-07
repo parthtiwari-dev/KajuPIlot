@@ -2,7 +2,7 @@
 
 Date: 2026-06-07
 Branch: `main`
-Status: Phase 3 AI parser, confirmation engine, ParseSheet, and accuracy tests implemented and verified; ready for IQOO AI provider smoke
+Status: Phase 4 Insights, AI summaries, and People CRM polish implemented and verified; ready for Docker/IQOO smoke
 
 ## Branch And Repo
 
@@ -324,6 +324,43 @@ Status: Phase 3 AI parser, confirmation engine, ParseSheet, and accuracy tests i
 | Add parser accuracy tests | Done, backend fake-provider and Flutter ParseSheet coverage added |
 | Keep roadmap doc untouched | Done |
 
+## Phase 4 Checklist
+
+| Task | Result |
+|---|---|
+| Add weekly insight API | Done, `GET /api/v1/insights/weekly` |
+| Add people insight API | Done, `GET /api/v1/insights/people` |
+| Compute weekly revenue | Done, received payments in period |
+| Split business and personal expenses | Done, personal expenses stay visible but do not reduce business profit |
+| Compute gross profit estimate | Done, revenue minus business expenses |
+| Count closed deals | Done, paid deals updated in period |
+| Rank top buyers | Done, sale deal rupee value instead of kg/quantity |
+| Detect slow payers | Done, linked payment delays plus currently overdue sale deals |
+| Detect inactive customers | Done, customers/both with prior activity and no recent deal/payment/call activity |
+| Add trust tag manual override | Done, Prisma and Drift fields added with migrations |
+| Preserve existing manual trust tags | Done, migration marks non-NEW existing tags as manual override |
+| Auto-tag slow payers carefully | Done, only sets `SLOW_PAYER` when avg delay is over 7 days and manual override is false |
+| Add AI today summary endpoint | Done, `GET /api/v1/ai/summary/today` |
+| Add AI weekly insights endpoint | Done, `GET /api/v1/ai/insights/weekly` |
+| Reuse AI provider switch | Done, OpenAI/Groq switch remains the single env control |
+| Add Redis/memory cache for AI summaries | Done, 12h today cache and 6h weekly cache |
+| Add 7 AM IST daily summary job | Done, BullMQ repeatable job starts when Redis is configured |
+| Add AI fallback behavior | Done, structured fallback returns when Redis/provider fails |
+| Replace More placeholder | Done, `/more` now opens `InsightsScreen` |
+| Add Insights Flutter API/provider | Done |
+| Add AI summary card | Done |
+| Add weekly stats card | Done |
+| Add top buyers, slow payers, inactive customers | Done |
+| Add business expense donut chart | Done with `fl_chart` |
+| Add Insights empty/loading/error/pull-to-refresh states | Done |
+| Improve profile stats | Done, deal count, pending, overdue, total sale value, and avg delay |
+| Replace inline trust chips | Done, one trust badge opens a bottom sheet |
+| Manual trust tag updates set override | Done locally and through backend update semantics |
+| Improve WhatsApp normalization | Done, supports 10-digit, leading-zero, and already-international numbers |
+| Add full party history route | Done, `/people/:partyId/history` |
+| Extend party history response | Done, compatible arrays plus sorted `timeline[]` |
+| Keep roadmap doc untouched | Done |
+
 ## Phase 0 App Shell Lock
 
 | Task | Result |
@@ -335,7 +372,7 @@ Status: Phase 3 AI parser, confirmation engine, ParseSheet, and accuracy tests i
 | Money tab | Real local-first Money screen added in Phase 1D |
 | Deals tab | Real local-first deals list added |
 | People tab | Real local-first People screen added in Phase 1B |
-| More tab | Placeholder screen added |
+| More tab | Real Insights screen added in Phase 4 |
 | Universal input | Visible above bottom navigation and opens real Phase 3 ParseSheet |
 | Android network access | `INTERNET` permission added |
 | Android notifications | `POST_NOTIFICATIONS` permission added |
@@ -420,7 +457,7 @@ Status: Phase 3 AI parser, confirmation engine, ParseSheet, and accuracy tests i
 | Caddy routing | API and admin hostnames configured through env vars |
 | Runtime Prisma CLI | `prisma` kept available so container migration deploy can run |
 | Local Docker start | Done, dev stack rebuilt and restarted |
-| Physical-device backend smoke | Prior IQOO app smoke passed; Phase 3 AI provider smoke pending |
+| Physical-device backend smoke | Prior IQOO app smoke passed; Phase 4 IQOO smoke pending |
 
 ## Current Stack
 
@@ -434,6 +471,7 @@ Status: Phase 3 AI parser, confirmation engine, ParseSheet, and accuracy tests i
 | drift_flutter | `0.2.4` |
 | drift_dev | `2.28.0` |
 | dio | `^5.9.2` |
+| fl_chart | `^0.71.0` |
 | flutter_local_notifications | `^19.5.0` |
 | flutter_secure_storage | `^10.3.1` |
 | intl | `^0.20.2` |
@@ -489,16 +527,18 @@ Status: Phase 3 AI parser, confirmation engine, ParseSheet, and accuracy tests i
 | `flutter pub run build_runner build --delete-conflicting-outputs` | Pass |
 | `dart.bat format lib test` | Pass |
 | `flutter.bat analyze` | Pass |
-| `flutter.bat test` | Pass, 51 Flutter tests |
+| `flutter.bat test` | Pass, 53 Flutter tests |
 | `flutter.bat test test/features/money` | Pass, 5 Money repository tests |
 | `flutter.bat test test\features\today` | Pass, 4 Today tests |
 | `flutter.bat test test\features\input` | Pass, 5 AI parser/input tests |
 | `flutter.bat build apk --debug` | Pass |
 | `npm.cmd run build` in API | Pass |
 | `npm.cmd run format` in API | Pass |
-| `npm.cmd test` in API | Pass, 14 suites / 65 tests |
+| `npm.cmd test` in API | Pass, 14 suites / 67 tests |
 | Phase 2 targeted backend specs | Pass, 9 Tasks/Call Logs/Insights tests |
 | Phase 3 targeted backend specs | Pass, 7 AI parser tests |
+| Phase 4 targeted backend specs | Pass, weekly totals and slow-payer trust override coverage |
+| Phase 4 targeted Flutter specs | Pass, Insights empty/data/donut coverage |
 | `npm.cmd audit` in API | Pass, 0 vulnerabilities |
 | Prisma validate with `DATABASE_URL` | Pass |
 | `npm.cmd run build` in admin | Pass |
@@ -516,7 +556,7 @@ Status: Phase 3 AI parser, confirmation engine, ParseSheet, and accuracy tests i
 | Authenticated personal expense smoke | Pass, `scope=PERSONAL` create and scoped summary returned successfully |
 | Android contact picker bridge compile | Pass through debug APK build |
 | Manual APK install/run | Pass, user confirmed IQOO opens app UI |
-| Manual setup flow against live backend | Prior IQOO app smoke passed; Phase 3 AI provider smoke pending |
+| Manual setup flow against live backend | Prior IQOO app smoke passed; Phase 4 IQOO smoke pending |
 
 ## Issues Found And Resolved
 
@@ -562,6 +602,12 @@ Status: Phase 3 AI parser, confirmation engine, ParseSheet, and accuracy tests i
 | New-contact warning could block useful AI confirms | Treated clear new-contact creation as a non-blocking warning; ambiguous or missing required fields still block |
 | AI confirm retries could duplicate business records | Added deterministic sync IDs plus stored confirmed result idempotency |
 | Provider output can be malformed | Added defensive JSON parsing, server validation, and `parse_failed` logging |
+| More tab was still a placeholder | Replaced it with the Phase 4 Insights dashboard |
+| Personal expenses could distort business profit | Weekly insights subtract only `BUSINESS` expenses from revenue and show personal spend separately |
+| Bucket-wise deal quantities cannot rank buyers by kg | Top buyers now rank by sale deal rupee value |
+| Automatic trust tags could fight the trader | Added `trustTagManualOverride` and only auto-set `SLOW_PAYER` when override is false |
+| Party history was split across separate arrays | Extended history with one sorted `timeline[]` while keeping old arrays compatible |
+| AI summary jobs could leave test workers open | Disabled the BullMQ repeat worker in Jest test mode |
 
 ## Upgrade Notes
 
@@ -585,10 +631,10 @@ Status: Phase 3 AI parser, confirmation engine, ParseSheet, and accuracy tests i
 | Manual setup smoke not yet fully completed | Enter setup code on IQOO, confirm token storage, relaunch into shell |
 | Flutter debug service can disconnect on phone | App still installs/runs; rerun `make run` after reconnecting if hot reload is needed |
 | Admin dashboard is placeholder-only | Keep until backend/admin roadmap phases |
-| Phase 3 physical phone smoke is pending | Rebuild/restart Docker, run the app, and test universal input parse/confirm on IQOO |
+| Phase 4 physical phone smoke is pending | Rebuild/restart Docker, migrate, run the app, and check More insights plus profile history/trust flows on IQOO |
 | Android notification permission depends on user approval | Allow notifications on the first run when prompted |
 | Dialer return behavior can vary by Android device | After tapping Call, return to the app and save the outcome sheet |
-| Live AI provider smoke is pending | Test Phase 3 once with OpenAI and once with Groq after valid keys/rate limits are available |
+| Live AI provider smoke is pending | Test Phase 4 AI summaries once with OpenAI and once with Groq after valid keys/rate limits are available |
 | AI parsing is online-only | Manual CRUD remains the offline fallback; parse/confirm needs the backend and provider network |
 | AI provider output quality can vary | Ambiguous or incomplete records block confirmation until edited in the preview |
 | AI provider prices can change | Keep env cost hints updated from OpenAI/Groq pricing pages |
@@ -754,6 +800,28 @@ Status: Phase 3 AI parser, confirmation engine, ParseSheet, and accuracy tests i
 | Manual fallback | ParseSheet shortcuts open existing manual Sale/Purchase, Payment, Expense, and Call Task flows |
 | Phase boundary | No reports dashboard, weekly AI summaries, admin AI logs UI, speech package, or AI update/delete in Phase 3 |
 
+## Phase 4 Data Decisions
+
+| Item | Decision |
+|---|---|
+| Phase shape | One coordinated Phase 4 with backend aggregations, AI summaries, Flutter Insights, and People CRM polish |
+| More tab purpose | `/more` is now the business insights surface, not a settings placeholder |
+| Weekly period | Seven days ending on `to`, or today when omitted |
+| People insight period | Thirty days ending on `to`, or today when omitted |
+| Revenue model | Received payments in the period |
+| Profit estimate | Revenue minus business expenses only |
+| Personal expenses | Visible in insights but excluded from business profit math |
+| Top buyers | Ranked by sale deal rupee value, because quantities are intentionally bucket/free-text |
+| Slow payers | Based on linked payment delay plus overdue pending sale deals |
+| Inactive customers | Customers/both with old activity and no recent deal/payment/call activity |
+| Trust automation | Only auto-set `SLOW_PAYER`; do not auto-set Reliable or Risky in Phase 4 |
+| Trust override | Manual trust changes set `trustTagManualOverride=true` and block automatic slow-payer changes |
+| AI summaries | Advisory text only; they never create, edit, or delete records |
+| AI caching | Today summary caches for 12 hours; weekly insights cache for 6 hours |
+| AI failure policy | Return structured fallback so manual app usage keeps working |
+| Party history | Backend returns one sorted timeline while preserving older arrays |
+| Phase boundary | No admin dashboard, release assets, advanced reports, notification polish, or AI action automation |
+
 ## Next Step
 
-Smoke Phase 3 on the IQOO: confirm `.env` has a valid AI key and `AI_PROVIDER=openai` or `AI_PROVIDER=groq`, then run `make build`, `make up`, `make migrate`, `make health`, and `make run`; open the universal input, type or voice a mixed trader note, parse it, edit/remove any preview items, confirm, then verify the new records in Today, People, Deals, and Money.
+Smoke Phase 4 on the IQOO: run `make build`, `make up`, `make migrate`, `make health`, and `make run`; add or reuse people/deals/payments/expenses/calls, open More, confirm weekly stats, AI summary, top buyers, slow payers, expense donut, profile trust update, WhatsApp button, and full history timeline.

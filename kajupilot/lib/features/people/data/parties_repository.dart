@@ -43,6 +43,11 @@ final partyLedgerProvider =
   return ref.watch(partiesRepositoryProvider).ledger(partyId);
 });
 
+final partyHistoryProvider =
+    FutureProvider.family<PartyHistory, String>((ref, partyId) {
+  return ref.watch(partiesRepositoryProvider).history(partyId);
+});
+
 class PartiesRepository {
   PartiesRepository({
     required AppDatabase database,
@@ -103,6 +108,7 @@ class PartiesRepository {
       phone: _clean(input.phone),
       type: input.type.apiValue,
       trustTag: input.trustTag.apiValue,
+      trustTagManualOverride: input.trustTag != TrustTagValue.fresh,
       notes: _clean(input.notes),
       syncId: syncId,
       createdAt: now,
@@ -145,6 +151,7 @@ class PartiesRepository {
               : Value(_clean(input.phone)),
       type: input.type?.apiValue,
       trustTag: input.trustTag?.apiValue,
+      trustTagManualOverride: input.trustTag == null ? null : true,
       notes: input.clearNotes
           ? const Value(null)
           : input.notes == null
@@ -340,6 +347,10 @@ class PartiesRepository {
     }
   }
 
+  Future<PartyHistory> history(String partyId) {
+    return _api.history(partyId);
+  }
+
   Future<void> _tryCreateOnApi({
     required String pendingId,
     required String id,
@@ -431,10 +442,14 @@ class PartiesRepository {
     var payable = 0;
     var overdueReceivable = 0;
     var overduePayable = 0;
+    var totalSaleValue = 0;
     final today = DateTime.now();
     final todayOnly = DateTime(today.year, today.month, today.day);
 
     for (final deal in deals) {
+      if (deal.type == PartyDealType.sale.apiValue) {
+        totalSaleValue += deal.totalPaise;
+      }
       final remaining = deal.totalPaise - deal.paidPaise;
       if (remaining <= 0) {
         continue;
@@ -471,6 +486,7 @@ class PartiesRepository {
       dealCount: deals.length,
       pendingAmountPaise: receivable - payable,
       overdueAmountPaise: overdueReceivable + overduePayable,
+      totalSaleValuePaise: totalSaleValue,
     );
   }
 

@@ -82,11 +82,11 @@ class PartiesApi {
     return PartyLedger.fromJson(response.data ?? <String, dynamic>{});
   }
 
-  Future<Map<String, dynamic>> history(String id) async {
+  Future<PartyHistory> history(String id) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/parties/$id/history',
     );
-    return response.data ?? <String, dynamic>{};
+    return PartyHistory.fromJson(response.data ?? <String, dynamic>{});
   }
 }
 
@@ -106,6 +106,8 @@ Party partyFromJson(Map<String, dynamic> json) {
     phone: json['phone'] as String?,
     type: json['type'] as String,
     trustTag: json['trustTag'] as String,
+    trustTagManualOverride:
+        json['trustTagManualOverride'] as bool? ?? json['trustTag'] != 'NEW',
     notes: json['notes'] as String?,
     syncId: json['syncId'] as String,
     createdAt: DateTime.parse(json['createdAt'] as String).toUtc(),
@@ -159,6 +161,7 @@ Map<String, Object?> partySyncPayload(Party party) {
     'phone': party.phone,
     'type': party.type,
     'trustTag': party.trustTag,
+    'trustTagManualOverride': party.trustTagManualOverride,
     'notes': party.notes,
     'createdAt': party.createdAt.toIso8601String(),
     'updatedAt': party.updatedAt.toIso8601String(),

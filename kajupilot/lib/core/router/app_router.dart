@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/deals/deals_screen.dart';
+import '../../features/insights/insights_screen.dart';
 import '../../features/money/money_screen.dart';
 import '../../features/people/people_screen.dart';
+import '../../features/people/party_history_screen.dart';
 import '../../features/people/person_profile_screen.dart';
 import '../../features/setup/setup_screen.dart';
 import '../../features/shell/app_shell.dart';
-import '../../features/shell/empty_feature_screen.dart';
 import '../../features/today/today_screen.dart';
 import '../auth/auth_controller.dart';
 
@@ -85,13 +86,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/more',
             pageBuilder: (context, state) => _tabPage(
               state,
-              const EmptyFeatureScreen(
-                key: Key('feature-more-screen'),
-                title: 'More',
-                eyebrow: 'Insights and settings',
-                body: 'Reports, theme controls, and admin links come later.',
-                icon: Icons.more_horiz,
-              ),
+              const InsightsScreen(),
             ),
           ),
         ],
@@ -100,6 +95,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/people/:partyId',
         builder: (context, state) {
           return PersonProfileScreen(
+            partyId: state.pathParameters['partyId']!,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/people/:partyId/history',
+        builder: (context, state) {
+          return PartyHistoryScreen(
             partyId: state.pathParameters['partyId']!,
           );
         },

@@ -270,6 +270,7 @@ Party testParty() {
     phone: '98765',
     type: 'CUSTOMER',
     trustTag: 'NEW',
+    trustTagManualOverride: false,
     notes: null,
     syncId: 'party-sync-1',
     createdAt: now,

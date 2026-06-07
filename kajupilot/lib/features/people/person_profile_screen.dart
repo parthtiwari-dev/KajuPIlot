@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/db/app_database.dart';
@@ -14,6 +15,7 @@ import '../../shared/widgets/kaju_empty_state.dart';
 import '../../shared/widgets/kaju_card.dart';
 import '../../shared/widgets/kaju_skeleton.dart';
 import '../../shared/widgets/person_avatar.dart';
+import '../../shared/widgets/status_badge.dart';
 import '../deals/data/deal_models.dart';
 import '../deals/data/deals_repository.dart';
 import '../deals/widgets/deal_card.dart';
@@ -114,7 +116,9 @@ class _PersonProfileScreenState extends ConsumerState<PersonProfileScreen>
               const SizedBox(height: KajuSpacing.lg),
               _ProfileStats(partyId: party.id),
               const SizedBox(height: KajuSpacing.lg),
-              _TrustSelector(party: party),
+              _TrustBadge(party: party),
+              const SizedBox(height: KajuSpacing.md),
+              _ProfileHistoryButton(partyId: party.id),
               const SizedBox(height: KajuSpacing.lg),
               TabBar(
                 controller: _tabController,
@@ -168,6 +172,7 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final type = PartyTypeValue.fromApi(party.type);
+    final whatsAppUri = _whatsAppUri(party.phone);
 
     return KajuCard(
       child: Column(
@@ -215,17 +220,9 @@ class _ProfileHeader extends StatelessWidget {
               const SizedBox(width: KajuSpacing.md),
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: party.phone == null
+                  onPressed: whatsAppUri == null
                       ? null
-                      : () {
-                          final number = party.phone!.replaceAll(
-                            RegExp(r'\D'),
-                            '',
-                          );
-                          unawaited(
-                            launchUrl(Uri.parse('https://wa.me/91$number')),
-                          );
-                        },
+                      : () => unawaited(launchUrl(whatsAppUri)),
                   icon: const Icon(Icons.chat_bubble_outline, size: 18),
                   label: const Text('WhatsApp'),
                 ),
@@ -236,6 +233,22 @@ class _ProfileHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+Uri? _whatsAppUri(String? phone) {
+  final digits = phone?.replaceAll(RegExp(r'\D'), '') ?? '';
+  if (digits.isEmpty) {
+    return null;
+  }
+
+  final normalized = switch (digits.length) {
+    10 => '91$digits',
+    11 when digits.startsWith('0') => '91${digits.substring(1)}',
+    >= 11 && <= 15 => digits,
+    _ => null,
+  };
+
+  return normalized == null ? null : Uri.parse('https://wa.me/$normalized');
 }
 
 class _ProfileStats extends ConsumerWidget {
@@ -251,18 +264,48 @@ class _ProfileStats extends ConsumerWidget {
       loading: () => const KajuSkeletonCard(),
       error: (_, __) => const SizedBox.shrink(),
       data: (value) => KajuCard(
-        child: Row(
+        child: Column(
           children: [
-            Expanded(
-              child: _StatTile(label: 'Deals', value: '${value.dealCount}'),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatTile(label: 'Deals', value: '${value.dealCount}'),
+                ),
+                Expanded(
+                  child: _AmountStatTile(
+                    label: 'Pending',
+                    amountPaise: value.pendingAmountPaise,
+                    tone: value.pendingAmountPaise > 0
+                        ? AmountDisplayTone.pending
+                        : AmountDisplayTone.neutral,
+                  ),
+                ),
+              ],
             ),
-            Expanded(
-              child: _AmountStatTile(
-                label: 'Pending',
-                amountPaise: value.pendingAmountPaise,
-              ),
+            const SizedBox(height: KajuSpacing.md),
+            Row(
+              children: [
+                Expanded(
+                  child: _AmountStatTile(
+                    label: 'Overdue',
+                    amountPaise: value.overdueAmountPaise,
+                    tone: value.overdueAmountPaise > 0
+                        ? AmountDisplayTone.overdue
+                        : AmountDisplayTone.neutral,
+                  ),
+                ),
+                Expanded(
+                  child: _AmountStatTile(
+                    label: 'Sale value',
+                    amountPaise: value.totalSaleValuePaise,
+                    tone: AmountDisplayTone.received,
+                  ),
+                ),
+              ],
             ),
-            Expanded(
+            const SizedBox(height: KajuSpacing.md),
+            Align(
+              alignment: Alignment.centerLeft,
               child: _StatTile(
                 label: 'Avg delay',
                 value: value.avgDelayDays == null
@@ -277,33 +320,132 @@ class _ProfileStats extends ConsumerWidget {
   }
 }
 
-class _TrustSelector extends ConsumerWidget {
-  const _TrustSelector({required this.party});
+class _TrustBadge extends ConsumerWidget {
+  const _TrustBadge({required this.party});
 
   final Party party;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = TrustTagValue.fromApi(party.trustTag);
+    final colors = context.kajuColors;
 
-    return Wrap(
-      spacing: KajuSpacing.sm,
-      runSpacing: KajuSpacing.sm,
-      children: [
-        for (final tag in TrustTagValue.values)
-          ChoiceChip(
-            selected: selected == tag,
-            label: Text(tag.label),
-            onSelected: (_) {
-              ref.read(partiesRepositoryProvider).update(
-                    party.id,
-                    UpdatePartyInput(trustTag: tag),
-                  );
-            },
+    return KajuCard(
+      onTap: () => _showTrustSheet(context, ref, selected),
+      child: Row(
+        children: [
+          Icon(Icons.verified_user_outlined,
+              color: _trustColor(colors, selected)),
+          const SizedBox(width: KajuSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Trust tag',
+                    style: Theme.of(context).textTheme.labelSmall),
+                const SizedBox(height: KajuSpacing.xs),
+                Text(
+                  party.trustTagManualOverride
+                      ? 'Manual: ${selected.label}'
+                      : 'Auto: ${selected.label}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
           ),
-      ],
+          StatusBadge(label: selected.label, tone: _trustTone(selected)),
+          const SizedBox(width: KajuSpacing.sm),
+          const Icon(Icons.keyboard_arrow_down),
+        ],
+      ),
     );
   }
+
+  Future<void> _showTrustSheet(
+    BuildContext context,
+    WidgetRef ref,
+    TrustTagValue selected,
+  ) async {
+    final tag = await showModalBottomSheet<TrustTagValue>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  KajuSpacing.lg,
+                  KajuSpacing.sm,
+                  KajuSpacing.lg,
+                  KajuSpacing.md,
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Set trust tag',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+              ),
+              for (final tag in TrustTagValue.values)
+                ListTile(
+                  selected: selected == tag,
+                  leading: Icon(
+                    selected == tag
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                  ),
+                  title: Text(tag.label),
+                  onTap: () => Navigator.of(context).pop(tag),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (tag != null) {
+      await ref.read(partiesRepositoryProvider).update(
+            party.id,
+            UpdatePartyInput(trustTag: tag),
+          );
+    }
+  }
+}
+
+class _ProfileHistoryButton extends StatelessWidget {
+  const _ProfileHistoryButton({required this.partyId});
+
+  final String partyId;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: () => context.push('/people/$partyId/history'),
+      icon: const Icon(Icons.history_outlined),
+      label: const Text('Open full history'),
+    );
+  }
+}
+
+StatusBadgeTone _trustTone(TrustTagValue tag) {
+  return switch (tag) {
+    TrustTagValue.reliable => StatusBadgeTone.success,
+    TrustTagValue.slowPayer => StatusBadgeTone.warning,
+    TrustTagValue.risky => StatusBadgeTone.danger,
+    TrustTagValue.fresh => StatusBadgeTone.neutral,
+  };
+}
+
+Color _trustColor(KajuColorTokens colors, TrustTagValue tag) {
+  return switch (tag) {
+    TrustTagValue.reliable => colors.success,
+    TrustTagValue.slowPayer => colors.warning,
+    TrustTagValue.risky => colors.danger,
+    TrustTagValue.fresh => colors.textSecondary,
+  };
 }
 
 class _ProfileEmptyTab extends StatelessWidget {
@@ -761,10 +903,12 @@ class _AmountStatTile extends StatelessWidget {
   const _AmountStatTile({
     required this.label,
     required this.amountPaise,
+    required this.tone,
   });
 
   final String label;
   final int amountPaise;
+  final AmountDisplayTone tone;
 
   @override
   Widget build(BuildContext context) {
@@ -776,9 +920,7 @@ class _AmountStatTile extends StatelessWidget {
         AmountDisplay(
           amountPaise: amountPaise,
           size: AmountDisplaySize.small,
-          tone: amountPaise > 0
-              ? AmountDisplayTone.pending
-              : AmountDisplayTone.neutral,
+          tone: tone,
         ),
       ],
     );

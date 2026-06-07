@@ -76,6 +76,7 @@ class PartyStats {
     this.pendingAmountPaise = 0,
     this.avgDelayDays,
     this.overdueAmountPaise = 0,
+    this.totalSaleValuePaise = 0,
   });
 
   factory PartyStats.fromJson(Map<String, dynamic>? json) {
@@ -88,6 +89,7 @@ class PartyStats {
       pendingAmountPaise: decimalRupeesToPaise(json['pendingAmount']),
       avgDelayDays: (json['avgDelayDays'] as num?)?.round(),
       overdueAmountPaise: decimalRupeesToPaise(json['overdueAmount']),
+      totalSaleValuePaise: decimalRupeesToPaise(json['totalSaleValue']),
     );
   }
 
@@ -95,6 +97,7 @@ class PartyStats {
   final int pendingAmountPaise;
   final int? avgDelayDays;
   final int overdueAmountPaise;
+  final int totalSaleValuePaise;
 }
 
 class PartyListItem {
@@ -146,6 +149,87 @@ class PartyLedger {
   final int netPaise;
   final int overdueAmountPaise;
   final DateTime? oldestOverdueDate;
+}
+
+enum PartyTimelineKind {
+  deal('deal', 'Deal'),
+  payment('payment', 'Payment'),
+  call('call', 'Call');
+
+  const PartyTimelineKind(this.apiValue, this.label);
+
+  final String apiValue;
+  final String label;
+
+  static PartyTimelineKind fromApi(String value) {
+    return PartyTimelineKind.values.firstWhere(
+      (kind) => kind.apiValue == value,
+      orElse: () => PartyTimelineKind.deal,
+    );
+  }
+}
+
+class PartyHistory {
+  const PartyHistory({required this.timeline});
+
+  factory PartyHistory.fromJson(Map<String, dynamic> json) {
+    final rawTimeline = json['timeline'];
+    return PartyHistory(
+      timeline: rawTimeline is List
+          ? rawTimeline
+              .whereType<Map<String, dynamic>>()
+              .map(PartyTimelineItem.fromJson)
+              .toList()
+          : const [],
+    );
+  }
+
+  final List<PartyTimelineItem> timeline;
+}
+
+class PartyTimelineItem {
+  const PartyTimelineItem({
+    required this.kind,
+    required this.id,
+    required this.title,
+    this.amountPaise,
+    required this.occurredAt,
+    this.notes,
+  });
+
+  factory PartyTimelineItem.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] as Map<String, dynamic>? ?? {};
+    return PartyTimelineItem(
+      kind: PartyTimelineKind.fromApi(json['kind'] as String? ?? 'deal'),
+      id: json['id'] as String? ?? '',
+      title: _title(json),
+      amountPaise:
+          json['amount'] == null ? null : decimalRupeesToPaise(json['amount']),
+      occurredAt: DateTime.parse(json['occurredAt'] as String).toLocal(),
+      notes: data['notes'] as String?,
+    );
+  }
+
+  final PartyTimelineKind kind;
+  final String id;
+  final String title;
+  final int? amountPaise;
+  final DateTime occurredAt;
+  final String? notes;
+}
+
+String _title(Map<String, dynamic> json) {
+  final title = json['title'] as String?;
+  if (title == null || title.trim().isEmpty) {
+    return 'Activity';
+  }
+  return title
+      .replaceAll('_', ' ')
+      .toLowerCase()
+      .split(' ')
+      .where((part) => part.isNotEmpty)
+      .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+      .join(' ');
 }
 
 class CreatePartyInput {

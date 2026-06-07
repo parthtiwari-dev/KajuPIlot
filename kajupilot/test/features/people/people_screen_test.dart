@@ -188,6 +188,7 @@ Party testParty({String name = 'Amit Verma'}) {
     phone: '98765',
     type: 'CUSTOMER',
     trustTag: 'NEW',
+    trustTagManualOverride: false,
     notes: null,
     syncId: 'sync-1',
     createdAt: now,

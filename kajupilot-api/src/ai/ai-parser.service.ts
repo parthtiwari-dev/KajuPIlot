@@ -837,7 +837,9 @@ export class AiParserService {
   }
 
   private hasBlockingWarnings(warnings: string[]) {
-    return warnings.some((warning) => warning !== "New contact will be created");
+    return warnings.some(
+      (warning) => warning !== "New contact will be created",
+    );
   }
 
   private emptyPayload(): ParsedAiPayload {

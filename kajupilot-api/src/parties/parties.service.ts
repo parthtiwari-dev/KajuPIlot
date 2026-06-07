@@ -76,6 +76,10 @@ export class PartiesService {
             phone: this.cleanNullable(dto.phone),
             type: dto.type ?? existing.type,
             trustTag: dto.trustTag ?? existing.trustTag,
+            trustTagManualOverride:
+              dto.trustTag !== undefined
+                ? dto.trustTag !== TrustTag.NEW
+                : existing.trustTagManualOverride,
             notes: this.cleanNullable(dto.notes),
             deletedAt: null,
           },
@@ -95,6 +99,8 @@ export class PartiesService {
         phone: this.cleanNullable(dto.phone),
         type: dto.type ?? PartyType.CUSTOMER,
         trustTag: dto.trustTag ?? TrustTag.NEW,
+        trustTagManualOverride:
+          dto.trustTag !== undefined && dto.trustTag !== TrustTag.NEW,
         notes: this.cleanNullable(dto.notes),
         syncId: dto.syncId,
       },
@@ -119,7 +125,9 @@ export class PartiesService {
           ? { phone: this.cleanNullable(dto.phone) }
           : {}),
         ...(dto.type !== undefined ? { type: dto.type } : {}),
-        ...(dto.trustTag !== undefined ? { trustTag: dto.trustTag } : {}),
+        ...(dto.trustTag !== undefined
+          ? { trustTag: dto.trustTag, trustTagManualOverride: true }
+          : {}),
         ...(dto.notes !== undefined
           ? { notes: this.cleanNullable(dto.notes) }
           : {}),
@@ -175,6 +183,63 @@ export class PartiesService {
       }),
     ]);
 
+    const timeline = [
+      ...deals.map((deal) => ({
+        kind: "deal" as const,
+        id: deal.id,
+        title: `${deal.type} deal`,
+        amount: this.decimalString(deal.totalAmount),
+        occurredAt: deal.createdAt.toISOString(),
+        data: {
+          ...deal,
+          quantityKg: this.decimalString(deal.quantityKg),
+          ratePerKg: this.decimalString(deal.ratePerKg),
+          totalAmount: this.decimalString(deal.totalAmount),
+          paidAmount: this.decimalString(deal.paidAmount),
+        },
+      })),
+      ...payments.map((payment) => ({
+        kind: "payment" as const,
+        id: payment.id,
+        title:
+          payment.type === PaymentType.RECEIVED
+            ? "Money received"
+            : "Money paid",
+        amount: this.decimalString(payment.amount),
+        occurredAt: payment.paymentDate.toISOString(),
+        data: {
+          id: payment.id,
+          userId: payment.userId,
+          partyId: payment.partyId,
+          dealId: payment.dealId,
+          type: payment.type,
+          amount: this.decimalString(payment.amount),
+          method: payment.method,
+          notes: payment.notes,
+          paymentDate: payment.paymentDate.toISOString(),
+          syncId: payment.syncId,
+          createdAt: payment.createdAt.toISOString(),
+          updatedAt: payment.updatedAt.toISOString(),
+          deletedAt: payment.deletedAt?.toISOString() ?? null,
+        },
+      })),
+      ...callLogs.map((callLog) => ({
+        kind: "call" as const,
+        id: callLog.id,
+        title: callLog.outcome,
+        amount: callLog.promisedAmount
+          ? this.decimalString(callLog.promisedAmount)
+          : null,
+        occurredAt: callLog.createdAt.toISOString(),
+        data: {
+          ...callLog,
+          promisedAmount: callLog.promisedAmount
+            ? this.decimalString(callLog.promisedAmount)
+            : null,
+        },
+      })),
+    ].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+
     return {
       deals: deals.map((deal) => ({
         ...deal,
@@ -204,6 +269,7 @@ export class PartiesService {
           ? this.decimalString(callLog.promisedAmount)
           : null,
       })),
+      timeline,
     };
   }
 
@@ -220,19 +286,27 @@ export class PartiesService {
   }
 
   private async withStats(userId: string, party: Party) {
-    const [deals, payments] = await Promise.all([
+    const [deals, payments, linkedReceivedPayments] = await Promise.all([
       this.dealsForParty(userId, party.id),
       this.unlinkedPaymentsForParty(userId, party.id),
+      this.linkedReceivedPaymentsForParty(userId, party.id),
     ]);
     const totals = this.computeLedger(deals, payments);
+    const totalSaleValue = deals.reduce((total, deal) => {
+      if (deal.type !== DealType.SALE) {
+        return total;
+      }
+      return total.plus(deal.totalAmount);
+    }, new Prisma.Decimal(0));
 
     return {
       ...this.toJson(party),
       stats: {
         dealCount: deals.length,
         pendingAmount: totals.net.toFixed(2),
-        avgDelayDays: null,
+        avgDelayDays: this.averageDelayDays(deals, linkedReceivedPayments),
         overdueAmount: totals.overdueAmount.toFixed(2),
+        totalSaleValue: totalSaleValue.toFixed(2),
       },
     };
   }
@@ -245,6 +319,7 @@ export class PartiesService {
       phone: party.phone,
       type: party.type,
       trustTag: party.trustTag,
+      trustTagManualOverride: party.trustTagManualOverride,
       notes: party.notes,
       syncId: party.syncId,
       createdAt: party.createdAt.toISOString(),
@@ -263,6 +338,67 @@ export class PartiesService {
         paymentDue: true,
       },
     });
+  }
+
+  private linkedReceivedPaymentsForParty(userId: string, partyId: string) {
+    return this.prisma.payment.findMany({
+      where: {
+        userId,
+        partyId,
+        deletedAt: null,
+        type: PaymentType.RECEIVED,
+        dealId: { not: null },
+        deal: { type: DealType.SALE, paymentDue: { not: null } },
+      },
+      select: {
+        paymentDate: true,
+        deal: {
+          select: {
+            paymentDue: true,
+          },
+        },
+      },
+    });
+  }
+
+  private averageDelayDays(
+    deals: DealForLedger[],
+    payments: Array<{
+      paymentDate: Date;
+      deal: { paymentDue: Date | null } | null;
+    }>,
+  ) {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const delays: number[] = [];
+
+    for (const payment of payments) {
+      const due = payment.deal?.paymentDue;
+      if (!due || payment.paymentDate <= due) {
+        continue;
+      }
+      delays.push(this.daysBetween(due, payment.paymentDate));
+    }
+
+    for (const deal of deals) {
+      if (deal.type !== DealType.SALE || !deal.paymentDue) {
+        continue;
+      }
+      const pending = new Prisma.Decimal(deal.totalAmount).minus(
+        deal.paidAmount,
+      );
+      if (pending.greaterThan(0) && deal.paymentDue < today) {
+        delays.push(this.daysBetween(deal.paymentDue, today));
+      }
+    }
+
+    if (delays.length === 0) {
+      return null;
+    }
+
+    return Math.round(
+      delays.reduce((total, value) => total + value, 0) / delays.length,
+    );
   }
 
   private unlinkedPaymentsForParty(userId: string, partyId: string) {
@@ -358,5 +494,13 @@ export class PartiesService {
 
   private decimalString(value: Prisma.Decimal | number | string) {
     return new Prisma.Decimal(value).toFixed(2);
+  }
+
+  private daysBetween(from: Date, to: Date) {
+    const millisecondsPerDay = 24 * 60 * 60 * 1000;
+    return Math.max(
+      0,
+      Math.ceil((to.getTime() - from.getTime()) / millisecondsPerDay),
+    );
   }
 }

@@ -38,6 +38,7 @@ model Party {
   phone     String?
   type      PartyType @default(CUSTOMER)
   trustTag  TrustTag  @default(NEW)
+  trustTagManualOverride Boolean @default(false)
   notes     String?
   syncId    String    @unique
   createdAt DateTime  @default(now())

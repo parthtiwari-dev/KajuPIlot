@@ -26,6 +26,8 @@ class Parties extends Table {
   TextColumn get phone => text().nullable()();
   TextColumn get type => text().withDefault(const Constant('CUSTOMER'))();
   TextColumn get trustTag => text().withDefault(const Constant('NEW'))();
+  BoolColumn get trustTagManualOverride =>
+      boolean().withDefault(const Constant(false))();
   TextColumn get notes => text().nullable()();
   TextColumn get syncId => text().unique()();
   DateTimeColumn get createdAt => dateTime()();
@@ -193,7 +195,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? driftDatabase(name: 'kajupilot'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -204,6 +206,12 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 3) {
             await migrator.addColumn(expenses, expenses.scope);
+          }
+          if (from < 4) {
+            await migrator.addColumn(
+              parties,
+              parties.trustTagManualOverride,
+            );
           }
         },
       );
