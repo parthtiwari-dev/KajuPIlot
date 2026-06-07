@@ -1,201 +1,260 @@
 # KajuPilot
 
-KajuPilot is a private, local-first business operating system for one cashew commodity trader. It is not a SaaS product, not a generic finance tracker, and not a chatbot. It is designed to replace a paper notebook, WhatsApp self-reminders, and memory-heavy follow-ups with a focused Android app, a private backend, and an admin view.
+KajuPilot is a private, local-first Android business operating system for a cashew trader. It is built for daily use by one real operator, not as a SaaS product or generic finance tracker.
 
-The roadmap in [docs/kajupilot_roadmap.md](docs/kajupilot_roadmap.md) is the source of truth for product behavior, architecture, design language, schema, API shape, and release phases.
+The app replaces scattered notebooks, WhatsApp self-reminders, memory-heavy follow-ups, and manual money tracking with one focused workflow: people, deals, money, tasks, calls, AI-assisted capture, and a private admin layer.
 
-## Current Status
+## Production Status
 
-Phase 0 foundation is scaffolded:
+KajuPilot v1.0.0 is deployed on an Oracle VPS and packaged as a private Android APK.
 
-- Flutter Android app in `kajupilot/`
-- NestJS API in `kajupilot-api/`
-- Next.js admin dashboard in `kajupilot-admin/`
-- PostgreSQL, Redis, API, admin, and Caddy wiring in `docker-compose.yml`
-- Environment template in `.env.example`
-- Production ignore rules in `.gitignore`
+Live production endpoints:
 
-Installed dependency locks are committed-ready:
+| Surface | URL | Notes |
+| --- | --- | --- |
+| Android API | [https://api.141.148.213.89.sslip.io/api/v1](https://api.141.148.213.89.sslip.io/api/v1) | Used by the release APK for sync |
+| API health | [https://api.141.148.213.89.sslip.io/api/v1/health](https://api.141.148.213.89.sslip.io/api/v1/health) | Public health check |
+| Admin dashboard | [https://admin.141.148.213.89.sslip.io](https://admin.141.148.213.89.sslip.io) | Password protected by Caddy basic auth and admin login |
 
-- `kajupilot/pubspec.lock`
-- `kajupilot-api/package-lock.json`
-- `kajupilot-admin/package-lock.json`
+Admin access has two layers:
 
-## Product Goal
+- Caddy browser popup: `ADMIN_USER` plus the password used to generate `ADMIN_PASS_HASH`.
+- Admin app login: `ADMIN_USER` plus `ADMIN_SECRET`.
 
-The app exists to help the trader answer three questions every day:
+Secrets are stored only in the server `.env` file and are intentionally not committed.
 
-- Who should I call first?
-- Which money is pending, due, or overdue?
-- What changed after each call?
+## What It Does
 
-The core experience is built around three flows:
+The trader can:
 
-- Night dump: the trader enters tomorrow's plan in plain language.
-- Morning check: the Today screen shows sorted calls, collections, deliveries, and reminders.
-- After-call capture: one tap logs the call outcome and creates follow-up work when needed.
+- Maintain people/party records for customers, suppliers, and both.
+- Add bucket-wise sale and purchase deals with multiple item rows.
+- Track received money, paid money, business expenses, and personal expenses.
+- See receivables, payables, pending balances, expense mix, and weekly business stats.
+- Create tasks and call reminders for follow-ups, collections, deliveries, and notes.
+- Use native phone calls and log call outcomes.
+- Use the universal input bar to turn messy trader notes into confirmed tasks, deals, payments, and expenses.
+- Work locally first on the phone, then sync to the Oracle backend when online.
+- Inspect activity, users, AI logs, and exports through the admin dashboard.
 
-Every AI-assisted action must also be possible manually through the UI. AI is a shortcut, never a dependency.
+## Product Flow
+
+The daily workflow is intentionally simple:
+
+1. Night dump: type or voice tomorrow's plan into the universal input.
+2. Morning check: use Today to see calls, collections, deliveries, and overdue work.
+3. During the day: add deals/payments/expenses manually or through the AI preview sheet.
+4. After calls: log the outcome and create follow-up tasks when needed.
+5. Weekly view: use More/Insights to review revenue, expenses, buyers, slow payers, and AI notes.
+
+Every AI-assisted path has a manual fallback. AI creates records only after preview and confirmation.
 
 ## Architecture
 
 | Layer | Stack | Purpose |
 | --- | --- | --- |
-| Mobile app | Flutter, Riverpod, GoRouter, Drift, Dio | Offline-first Android APK with local SQLite writes and background sync |
-| Backend API | Node.js 20 LTS, NestJS, Prisma | Auth setup, validation, sync-ready schema, business logic, AI parsing, admin APIs |
-| Database | PostgreSQL 16 | Durable server-side business records with decimal-safe money fields |
-| Jobs/cache | Redis, BullMQ | Scheduled insights, retries, rate limits, cached summaries |
-| AI | OpenAI SDK, Groq SDK | Provider-switchable model gateway for future plain-language parsing and insights |
-| Admin | Next.js App Router, Tailwind, shadcn-compatible utilities, Recharts | Private visibility into activity, records, AI logs, and exports |
-| Infrastructure | Docker Compose, Caddy | VPS deployment with HTTPS reverse proxy |
+| Mobile app | Flutter, Riverpod, GoRouter, Drift, Dio | Offline-first Android APK with local SQLite writes and sync |
+| Backend API | NestJS, Prisma, Node.js 20 | Auth, CRUD APIs, sync rules, business logic, AI parsing, admin APIs |
+| Database | PostgreSQL 16 | Durable server records with decimal-safe money fields |
+| Cache/jobs | Redis, BullMQ | AI cache, rate limits, scheduled summaries |
+| AI gateway | OpenAI + Groq SDKs | Provider-switchable parsing and summaries |
+| Admin | Next.js 15, Tailwind, Recharts | Private operational dashboard and exports |
+| Edge | Caddy | HTTPS reverse proxy and admin basic auth |
+| Deployment | Docker Compose on Oracle VPS | Private production stack |
 
-The roadmap calls out Next.js 14 for the admin. This scaffold uses the patched Next.js 15 line because current npm audit data flags the Next 14 line with known advisories.
+Production network shape:
+
+```text
+Phone APK
+  -> https://api.141.148.213.89.sslip.io/api/v1
+  -> Caddy 443
+  -> API container 3000
+  -> Postgres + Redis private Docker network
+
+Admin browser
+  -> https://admin.141.148.213.89.sslip.io
+  -> Caddy 443 + basic auth
+  -> Admin container 3001
+  -> API container through http://api:3000/api/v1
+```
+
+Only ports `80` and `443` are public for KajuPilot. API `3000`, admin `3001`, Postgres `5432`, and Redis `6379` are not exposed publicly.
 
 ## Repository Layout
 
 ```text
 .
-|-- kajupilot/              # Flutter Android app
-|-- kajupilot-api/          # NestJS API
-|-- kajupilot-admin/        # Next.js admin dashboard
+|-- kajupilot/                    # Flutter Android app
+|-- kajupilot-api/                # NestJS API
+|-- kajupilot-admin/              # Next.js admin dashboard
 |-- docs/
-|   `-- kajupilot_roadmap.md
-|-- .env.example
-|-- .gitignore
+|   |-- ORACLE_DEPLOYMENT.md      # Production deploy/runbook
+|   |-- PROGRESS_AUDIT.md         # Phase-by-phase implementation record
+|   `-- kajupilot_roadmap.md      # Locked source roadmap
+|-- scripts/
+|   |-- dev.ps1                   # Windows local helper
+|   `-- oracle-prod-env.sh        # Oracle production env helper
 |-- Caddyfile
 |-- Makefile
-|-- docker-compose.yml
-|-- docker-compose.dev.yml
-|-- LICENSE
-`-- README.md
+|-- docker-compose.yml            # Production compose
+|-- docker-compose.dev.yml        # Local dev port override
+|-- .env.example                  # Minimal key list
+|-- .env.local.example            # Local Windows template
+`-- .env.production.example       # Oracle production template
 ```
 
-## Prerequisites
+## Private APK Release
 
-- Git
-- Flutter SDK and Dart
-- Android Studio or Android SDK tooling
-- Node.js 20 LTS for production parity
+Build the production APK against the Oracle API:
+
+```powershell
+cd "C:\great learning self paced\z Final Projects\KajuPIlot"
+make release-oracle ORACLE_IP=141.148.213.89
+```
+
+Primary APK to share:
+
+```text
+kajupilot\build\app\outputs\flutter-apk\app-arm64-v8a-release.apk
+```
+
+Most modern Android phones should use the `arm64-v8a` APK. The release is private APK distribution, not Play Store publishing.
+
+Before handing over a clean APK, reset local phone data:
+
+```powershell
+adb uninstall com.kajupilot.app
+adb install "kajupilot\build\app\outputs\flutter-apk\app-arm64-v8a-release.apk"
+```
+
+The user needs:
+
+- The APK.
+- Internet access.
+- The private setup code from Oracle `.env` under `ADMIN_SETUP_CODE`.
+- Android permission to install from unknown sources.
+
+## Oracle Operations
+
+SSH:
+
+```powershell
+ssh -i "C:\great learning self paced\z Final Projects\oracle-auto-provision\oracle_key" ubuntu@141.148.213.89
+```
+
+Sync code and restart production:
+
+```bash
+cd ~/kajupilot
+git pull origin main
+make prod-up
+make prod-migrate
+make prod-health
+make prod-ps
+```
+
+Check logs:
+
+```bash
+cd ~/kajupilot
+make prod-logs
+```
+
+Verify public API:
+
+```bash
+curl -fsS https://api.141.148.213.89.sslip.io/api/v1/health
+curl -fsS https://api.141.148.213.89.sslip.io/api/v1/ai/providers
+```
+
+Do not use `make health` on Oracle. That target is for Windows local development and calls PowerShell. Use `make prod-health`.
+
+Full deployment notes are in [docs/ORACLE_DEPLOYMENT.md](docs/ORACLE_DEPLOYMENT.md).
+
+## Data Reset For Handoff
+
+To wipe all KajuPilot server test data before a fresh handoff:
+
+```bash
+cd ~/kajupilot
+docker compose --env-file .env -f docker-compose.yml down -v
+make prod-up
+make prod-migrate
+make prod-health
+```
+
+This deletes KajuPilot's Postgres volume. Use it only when test data can be discarded.
+
+To clear a phone:
+
+```powershell
+adb shell pm clear com.kajupilot.app
+```
+
+Or fully reinstall:
+
+```powershell
+adb uninstall com.kajupilot.app
+adb install "kajupilot\build\app\outputs\flutter-apk\app-arm64-v8a-release.apk"
+```
+
+## Local Development
+
+Prerequisites:
+
+- Flutter SDK and Android tooling
+- Node.js 20
 - Docker Desktop or Docker Engine with Compose
-- OpenAI and Groq API keys for AI provider switching
-- An Oracle VPS or equivalent Linux server for deployment
+- Git
+- OpenAI/Groq keys for AI features
 
-On Windows PowerShell, prefer `npm.cmd` if direct `npm` execution is blocked by script policy.
-
-## Local Setup
-
-Install all project dependencies from lockfiles:
-
-```powershell
-cd kajupilot
-flutter pub get
-
-cd ..\kajupilot-api
-npm.cmd install
-npx.cmd prisma generate
-
-cd ..\kajupilot-admin
-npm.cmd install
-```
-
-## Flutter App
-
-Run the Android app:
-
-```powershell
-cd kajupilot
-flutter run
-```
-
-Analyze the app:
-
-```powershell
-cd kajupilot
-flutter analyze
-```
-
-Release build:
-
-```powershell
-cd kajupilot
-flutter clean
-flutter pub get
-flutter build apk --release --split-per-abi
-```
-
-## Backend API
-
-The API currently includes:
-
-- `GET /api/v1/health`
-- `POST /api/v1/auth/setup`
-- `GET /api/v1/auth/me`
-- Prisma schema for users, parties, deals, payments, expenses, tasks, call logs, and AI parse logs
-
-Run locally:
-
-```powershell
-cd kajupilot-api
-npm.cmd run start:dev
-```
-
-Build:
-
-```powershell
-cd kajupilot-api
-npm.cmd run build
-```
-
-Generate Prisma client:
-
-```powershell
-cd kajupilot-api
-npx.cmd prisma generate
-```
-
-Create a development migration after configuring `DATABASE_URL`:
-
-```powershell
-cd kajupilot-api
-npx.cmd prisma migrate dev --name init
-```
-
-## Admin Dashboard
-
-Run locally:
-
-```powershell
-cd kajupilot-admin
-npm.cmd run dev
-```
-
-Build:
-
-```powershell
-cd kajupilot-admin
-npm.cmd run build
-```
-
-The scaffolded dashboard is intentionally minimal. It gives the admin app a production-buildable shell while the real API-backed pages are built in later phases.
-
-## Environment Variables
-
-For local Windows development:
+Create local env:
 
 ```powershell
 copy .env.local.example .env
 ```
 
-For Oracle production:
+Start the local stack:
 
-```bash
-cp .env.production.example .env
-nano .env
+```powershell
+make env-check
+make build
+make up
+make migrate
+make health
 ```
 
-Use `.env.example` only as a minimal key list. The full copy-paste templates are `.env.local.example` and `.env.production.example`.
+Run on a physical Android phone with hot reload:
 
-On Oracle, the important production URL values are:
+```powershell
+make devices
+make run
+```
+
+`make run` uses:
+
+```text
+adb reverse tcp:3000 tcp:3000
+flutter run --dart-define=API_BASE_URL=http://127.0.0.1:3000/api/v1
+```
+
+Run checks:
+
+```powershell
+make checks
+```
+
+## Environment
+
+Use the right template:
+
+| Environment | Template |
+| --- | --- |
+| Windows local dev | `.env.local.example` |
+| Oracle production | `.env.production.example` |
+| Minimal key list | `.env.example` |
+
+Important production values:
 
 ```env
 DEPLOY_TARGET=production
@@ -208,175 +267,48 @@ ALLOWED_ORIGINS=https://admin.141.148.213.89.sslip.io
 
 `ADMIN_API_URL` is intentionally internal Docker networking. Do not change it to the public HTTPS URL.
 
-## AI Provider Switch
-
-The backend has one active AI switch:
+AI provider switch:
 
 ```env
 AI_PROVIDER=openai
 ```
 
-Allowed values are:
+Allowed values:
 
 - `openai`
 - `groq`
 
-Default OpenAI model:
+Switching providers only requires changing `AI_PROVIDER`, assuming the matching API key is present.
 
-```env
-OPENAI_MODEL=gpt-4o-mini
-```
+## Verification History
 
-Default Groq model:
+The v1 implementation has passed:
 
-```env
-GROQ_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
-```
+- Flutter analyze and tests.
+- Flutter debug APK and release APK builds.
+- API build, test suite, audit, and Prisma validation.
+- Admin typecheck, production build, and audit.
+- Docker production compose startup on Oracle.
+- Prisma migrations on Oracle.
+- Public API health and AI provider checks.
+- Admin login through Caddy basic auth plus app login.
 
-To switch all future AI calls to Groq, change only:
-
-```env
-AI_PROVIDER=groq
-```
-
-The cost values are editable env hints used by the backend cost estimator. Keep them updated from the provider pricing pages when pricing changes.
-
-Check the active provider without exposing keys:
-
-```powershell
-Invoke-RestMethod http://localhost:3000/api/v1/ai/providers
-```
-
-## Docker
-
-For local development, use the Makefile command menu. It starts the API directly on `localhost:3000`, which is the cleanest path for a physical Android phone through `adb reverse`.
-
-If `make` is installed:
-
-```powershell
-make help
-```
-
-If `make` is not installed, run the same commands through PowerShell:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/dev.ps1 help
-```
-
-Recommended terminal split:
-
-```powershell
-# Terminal 1: create/check env, start Docker dev stack, migrate, verify
-make env
-make env-check
-make build
-make up
-make migrate
-make health
-make ps
-```
-
-```powershell
-# Terminal 2: keep logs open
-make logs
-```
-
-```powershell
-# Terminal 3: run the Flutter app on the IQOO with hot reload
-make devices
-make run
-```
-
-The Flutter run command uses the default IQOO device id `1592533185000B8`. Override it only if `make devices` shows a different id:
-
-```powershell
-make run DEVICE_ID=your_device_id
-```
-
-The Flutter run command runs:
-
-- `adb reverse tcp:3000 tcp:3000`
-- `flutter run --dart-define=API_BASE_URL=http://127.0.0.1:3000/api/v1`
-
-Useful dev commands:
-
-```powershell
-make ps
-make restart
-make down
-make apk
-make checks
-```
-
-## Oracle Production Deployment
-
-The Oracle production path is documented in [docs/ORACLE_DEPLOYMENT.md](docs/ORACLE_DEPLOYMENT.md).
-
-Production uses Caddy as the only public entrypoint:
-
-```text
-Phone app -> https://api.<oracle-ip>.sslip.io/api/v1 -> Caddy -> API container
-Admin web -> https://admin.<oracle-ip>.sslip.io -> Caddy -> Admin container
-```
-
-Postgres, Redis, the API container port `3000`, and the admin container port `3001` stay private inside Docker.
-
-On the VPS, use the production targets:
-
-```bash
-bash scripts/oracle-prod-env.sh
-make prod-up
-make prod-migrate
-make prod-health
-```
-
-On Windows, build the private release APK against the deployed API:
-
-```powershell
-make release-oracle ORACLE_IP=141.148.213.89
-```
-
-Use `make up` for local development. Use `make prod-up` or `make up DEPLOY_TARGET=prod` on Oracle so the dev port override is not used.
+See [docs/PROGRESS_AUDIT.md](docs/PROGRESS_AUDIT.md) for the full implementation record.
 
 ## Engineering Rules
 
-- Local-first writes: the Flutter app writes to Drift SQLite first, updates UI immediately, then syncs in the background.
-- Idempotent sync: client-created `syncId` values prevent duplicate server records.
-- Soft deletes only: business records are marked deleted with `deletedAt`, not hard-deleted.
-- Money safety: server money values use decimal types, never floating-point math.
-- Manual fallback: every AI parse path has a matching manual UI flow.
-- Single-user assumptions: conflict handling can remain last-write-wins unless multi-device behavior is introduced.
-- Minimal clutter: every feature must help the trader act faster, collect faster, or remember less.
-
-## Verification
-
-Current setup has been verified with:
-
-```powershell
-cd kajupilot
-flutter analyze
-
-cd ..\kajupilot-api
-npm.cmd run build
-npm.cmd audit
-
-cd ..\kajupilot-admin
-npm.cmd run build
-npm.cmd audit
-```
-
-Expected results:
-
-- Flutter analysis: no issues
-- API build: passes
-- Admin production build: passes
-- API npm audit: 0 vulnerabilities
-- Admin npm audit: 0 vulnerabilities
+- Local-first writes: phone writes to Drift SQLite first, then syncs.
+- Idempotent sync: client-generated IDs and `syncId` values prevent duplicate records.
+- Soft deletes: business records use `deletedAt`.
+- Money safety: server values use decimal-safe storage; app stores money in paise.
+- AI safety: AI creates records only after preview/confirmation.
+- Manual fallback: every AI path has a manual UI path.
+- Private deployment: this is built for one daily operator, not multi-tenant SaaS.
 
 ## Documentation Policy
 
-Treat `docs/kajupilot_roadmap.md` as locked project context unless a future task explicitly asks to edit it. Implementation work should conform to that roadmap instead of reshaping it casually.
+Treat [docs/kajupilot_roadmap.md](docs/kajupilot_roadmap.md) as locked project context unless a future task explicitly asks to edit it.
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
