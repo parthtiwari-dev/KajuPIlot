@@ -71,6 +71,8 @@ function Ensure-Env {
   }
 
   $envContent = @"
+COMPOSE_PROJECT_NAME=kajupilot
+DEPLOY_TARGET=local
 DB_PASSWORD=kaju_dev_password
 JWT_SECRET=dev_jwt_secret_1234567890_abcdefghijklmnopqrstuvwxyz_2026
 ADMIN_SETUP_CODE=KAJU-2026
@@ -79,7 +81,9 @@ ADMIN_USER=parth
 ADMIN_PASS_HASH=replace_me_with_caddy_hash_password_output
 API_HOST=:80
 ADMIN_HOST=admin.localhost
+ADMIN_API_URL=http://api:3000/api/v1
 NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+ALLOWED_ORIGINS=http://localhost:3001,http://admin.localhost
 AI_PROVIDER=openai
 OPENAI_API_KEY=replace_me
 OPENAI_MODEL=gpt-4o-mini
@@ -91,6 +95,7 @@ GROQ_INPUT_COST_PER_1M=0.11
 GROQ_OUTPUT_COST_PER_1M=0.34
 AI_MAX_TOKENS=700
 AI_TEMPERATURE=0.2
+AI_PARSE_RATE_LIMIT_PER_HOUR=20
 "@
 
   Set-Content -Path $EnvFile -Value $envContent -Encoding utf8
@@ -185,7 +190,7 @@ switch ($Command) {
     $envMap = Read-EnvMap
     $content = Get-Content $EnvFile
     $interesting = $content | Where-Object {
-      $_ -match "^(ADMIN_SETUP_CODE|API_HOST|NEXT_PUBLIC_API_URL|AI_PROVIDER|OPENAI_MODEL|GROQ_MODEL)="
+      $_ -match "^(DEPLOY_TARGET|ADMIN_SETUP_CODE|API_HOST|ADMIN_HOST|NEXT_PUBLIC_API_URL|ALLOWED_ORIGINS|AI_PROVIDER|OPENAI_MODEL|GROQ_MODEL)="
     }
     $interesting | ForEach-Object { Write-Host $_ }
     if ($content -match "replace_me") {

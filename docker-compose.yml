@@ -51,6 +51,7 @@ services:
       AI_MAX_TOKENS: ${AI_MAX_TOKENS:-700}
       AI_TEMPERATURE: ${AI_TEMPERATURE:-0.2}
       AI_PARSE_RATE_LIMIT_PER_HOUR: ${AI_PARSE_RATE_LIMIT_PER_HOUR:-20}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
       NODE_ENV: production
       PORT: 3000
     depends_on:
@@ -72,6 +73,7 @@ services:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       ADMIN_SECRET: ${ADMIN_SECRET}
       ADMIN_USER: ${ADMIN_USER}
+      ADMIN_HOST: ${ADMIN_HOST}
       NODE_ENV: production
       PORT: 3001
       HOSTNAME: 0.0.0.0

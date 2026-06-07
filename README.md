@@ -189,6 +189,8 @@ copy .env.example .env
 Template:
 
 ```env
+COMPOSE_PROJECT_NAME=kajupilot
+DEPLOY_TARGET=local
 DB_PASSWORD=replace_me_with_a_strong_password
 JWT_SECRET=replace_me_with_a_64_character_random_secret
 ADMIN_SETUP_CODE=KAJU-2026
@@ -197,7 +199,9 @@ ADMIN_USER=parth
 ADMIN_PASS_HASH=replace_me_with_caddy_hash_password_output
 API_HOST=api.localhost
 ADMIN_HOST=admin.localhost
+ADMIN_API_URL=http://api:3000/api/v1
 NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+ALLOWED_ORIGINS=http://localhost:3001,http://admin.localhost
 AI_PROVIDER=openai
 OPENAI_API_KEY=replace_me
 OPENAI_MODEL=gpt-4o-mini
@@ -209,6 +213,7 @@ GROQ_INPUT_COST_PER_1M=0.11
 GROQ_OUTPUT_COST_PER_1M=0.34
 AI_MAX_TOKENS=700
 AI_TEMPERATURE=0.2
+AI_PARSE_RATE_LIMIT_PER_HOUR=20
 ```
 
 ## AI Provider Switch
@@ -311,20 +316,35 @@ make apk
 make checks
 ```
 
-Start the full production-style stack with Caddy:
+## Oracle Production Deployment
 
-```powershell
-docker compose up -d --build
-docker compose ps
+The Oracle production path is documented in [docs/ORACLE_DEPLOYMENT.md](docs/ORACLE_DEPLOYMENT.md).
+
+Production uses Caddy as the only public entrypoint:
+
+```text
+Phone app -> https://api.<oracle-ip>.sslip.io/api/v1 -> Caddy -> API container
+Admin web -> https://admin.<oracle-ip>.sslip.io -> Caddy -> Admin container
 ```
 
-Run production Prisma migrations inside the API container:
+Postgres, Redis, the API container port `3000`, and the admin container port `3001` stay private inside Docker.
 
-```powershell
-docker compose exec api npx prisma migrate deploy
+On the VPS, use the production targets:
+
+```bash
+bash scripts/oracle-prod-env.sh
+make prod-up
+make prod-migrate
+make prod-health
 ```
 
-The Compose stack keeps PostgreSQL and Redis on an internal Docker network, exposes traffic through Caddy, and builds the API/admin containers from their local Dockerfiles.
+On Windows, build the private release APK against the deployed API:
+
+```powershell
+make release-oracle ORACLE_IP=141.148.213.89
+```
+
+Use `make up` for local development. Use `make prod-up` or `make up DEPLOY_TARGET=prod` on Oracle so the dev port override is not used.
 
 ## Engineering Rules
 

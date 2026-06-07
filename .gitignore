@@ -17,6 +17,8 @@ $RECYCLE.BIN/
 .env
 .env.*
 !.env.example
+!.env.local.example
+!.env.production.example
 !.env.sample
 *.local
 *.pem

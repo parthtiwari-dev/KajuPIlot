@@ -934,6 +934,19 @@ Status: Phase 5 Admin Dashboard implemented and verified; ready for Phase 6 plan
 | Docker health | Pass, `make health` returned API `ok` and AI provider data |
 | Phone smoke | Not run from Codex; install the fresh `com.kajupilot.app` release on IQOO and use the final manual smoke checklist |
 
+## Deployment Hardening
+
+| Item | Decision |
+|---|---|
+| Deployment target switch | Added `DEPLOY_TARGET=local|production` to env templates; local remains the default |
+| Production Make targets | Added explicit `prod-build`, `prod-up`, `prod-migrate`, `prod-health`, `prod-logs`, and related targets |
+| Oracle env generation | Added `scripts/oracle-prod-env.sh` to generate `.env` on the VPS without pasting secrets into the repo or chat |
+| Oracle guide | Added `docs/ORACLE_DEPLOYMENT.md` with OCI ports, VPS firewall, Docker, env, compose, health, admin, and APK commands |
+| Public ports | Production continues to expose only Caddy `80/443`; API/admin/Postgres/Redis raw ports remain private |
+| Admin redirect | Admin redirects now fall back to `ADMIN_HOST` when an invalid `0.0.0.0` host is encountered |
+| CORS | Backend accepts optional `ALLOWED_ORIGINS` for production browser-origin narrowing while keeping native mobile sync unaffected |
+| Release APK target | Added `make release-oracle ORACLE_IP=...` to build the phone APK against the deployed HTTPS API URL |
+
 ## Next Step
 
 Install the fresh private APK on IQOO and run the final Phase 6 phone smoke checklist before sharing the APK.
