@@ -106,9 +106,9 @@ git pull origin main
 
 If GitHub auth is annoying on the VPS, package the repo locally and copy the tarball instead.
 
-## Generate Production Env
+## Create Production Env
 
-On Oracle:
+Option A, use the guided script:
 
 ```bash
 cd ~/kajupilot
@@ -133,6 +133,39 @@ ADMIN_HOST=admin.141.148.213.89.sslip.io
 NEXT_PUBLIC_API_URL=https://api.141.148.213.89.sslip.io/api/v1
 ALLOWED_ORIGINS=https://admin.141.148.213.89.sslip.io
 ```
+
+Option B, copy the production example and edit it:
+
+```bash
+cd ~/kajupilot
+cp .env.production.example .env
+nano .env
+```
+
+Replace these values:
+
+```text
+DB_PASSWORD
+JWT_SECRET
+ADMIN_SECRET
+ADMIN_PASS_HASH
+OPENAI_API_KEY
+GROQ_API_KEY, only if using Groq
+```
+
+If you copied your local `.env` from Windows instead, edit only the deployment lines:
+
+```env
+COMPOSE_PROJECT_NAME=kajupilot
+DEPLOY_TARGET=production
+API_HOST=api.141.148.213.89.sslip.io
+ADMIN_HOST=admin.141.148.213.89.sslip.io
+ADMIN_API_URL=http://api:3000/api/v1
+NEXT_PUBLIC_API_URL=https://api.141.148.213.89.sslip.io/api/v1
+ALLOWED_ORIGINS=https://admin.141.148.213.89.sslip.io
+```
+
+Keep your existing database password, JWT secret, admin values, and API keys.
 
 ## Start Production
 

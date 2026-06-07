@@ -180,41 +180,33 @@ The scaffolded dashboard is intentionally minimal. It gives the admin app a prod
 
 ## Environment Variables
 
-Copy the template and fill real values:
+For local Windows development:
 
 ```powershell
-copy .env.example .env
+copy .env.local.example .env
 ```
 
-Template:
+For Oracle production:
+
+```bash
+cp .env.production.example .env
+nano .env
+```
+
+Use `.env.example` only as a minimal key list. The full copy-paste templates are `.env.local.example` and `.env.production.example`.
+
+On Oracle, the important production URL values are:
 
 ```env
-COMPOSE_PROJECT_NAME=kajupilot
-DEPLOY_TARGET=local
-DB_PASSWORD=replace_me_with_a_strong_password
-JWT_SECRET=replace_me_with_a_64_character_random_secret
-ADMIN_SETUP_CODE=KAJU-2026
-ADMIN_SECRET=replace_me
-ADMIN_USER=parth
-ADMIN_PASS_HASH=replace_me_with_caddy_hash_password_output
-API_HOST=api.localhost
-ADMIN_HOST=admin.localhost
+DEPLOY_TARGET=production
+API_HOST=api.141.148.213.89.sslip.io
+ADMIN_HOST=admin.141.148.213.89.sslip.io
 ADMIN_API_URL=http://api:3000/api/v1
-NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
-ALLOWED_ORIGINS=http://localhost:3001,http://admin.localhost
-AI_PROVIDER=openai
-OPENAI_API_KEY=replace_me
-OPENAI_MODEL=gpt-4o-mini
-OPENAI_INPUT_COST_PER_1M=0.15
-OPENAI_OUTPUT_COST_PER_1M=0.60
-GROQ_API_KEY=replace_me
-GROQ_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
-GROQ_INPUT_COST_PER_1M=0.11
-GROQ_OUTPUT_COST_PER_1M=0.34
-AI_MAX_TOKENS=700
-AI_TEMPERATURE=0.2
-AI_PARSE_RATE_LIMIT_PER_HOUR=20
+NEXT_PUBLIC_API_URL=https://api.141.148.213.89.sslip.io/api/v1
+ALLOWED_ORIGINS=https://admin.141.148.213.89.sslip.io
 ```
+
+`ADMIN_API_URL` is intentionally internal Docker networking. Do not change it to the public HTTPS URL.
 
 ## AI Provider Switch
 
